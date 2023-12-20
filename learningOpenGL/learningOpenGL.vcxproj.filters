@@ -16,6 +16,9 @@
     <Filter Include="Resource Files\shaders">
       <UniqueIdentifier>{d1f7af25-272e-4236-9834-746155f43a4b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\textures">
+      <UniqueIdentifier>{00f96cc9-7811-4adc-80a1-5fefe2772676}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="learningOpenGL.cpp">
@@ -42,6 +45,9 @@
     <ClCompile Include="VAO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -66,6 +72,9 @@
   <ItemGroup>
     <Image Include="..\..\..\..\Downloads\awesomeface.png">
       <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\Downloads\angryCheryl.png">
+      <Filter>Resource Files\textures</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

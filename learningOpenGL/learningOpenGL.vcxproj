@@ -139,6 +139,7 @@
     <ClCompile Include="learningOpenGL.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
+    <ClCompile Include="stb.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
@@ -151,6 +152,7 @@
     <ClInclude Include="VBO.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\..\Downloads\angryCheryl.png" />
     <Image Include="..\..\..\..\Downloads\awesomeface.png" />
   </ItemGroup>
   <ItemGroup>

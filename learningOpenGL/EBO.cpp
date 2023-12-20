@@ -1,7 +1,7 @@
 #include "EBO.h"
 #include <glad/glad.h>
 
-EBO::EBO(GLfloat* indicies, GLsizeiptr size) {
+EBO::EBO(GLuint* indicies, GLsizeiptr size) {
 	glGenBuffers(1, &ID);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ID);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indicies, GL_STATIC_DRAW);

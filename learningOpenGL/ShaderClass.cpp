@@ -16,7 +16,7 @@ std::string get_file_contents(const char* filename)
 	throw(errno);
 }
 
-ShaderClass::ShaderClass(char* vertexFile, char* fragmentFile) {
+ShaderClass::ShaderClass(const char* vertexFile,const char* fragmentFile) {
     std::string vertexCode = get_file_contents(vertexFile);
     std::string fragmentCode = get_file_contents(fragmentFile);
 
@@ -39,6 +39,7 @@ ShaderClass::ShaderClass(char* vertexFile, char* fragmentFile) {
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
     glCompileShader(fragmentShader);
+
     // check for shader compile errors
     //glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     //if (!success)

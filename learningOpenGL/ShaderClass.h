@@ -10,7 +10,7 @@ class ShaderClass
 {
 public:
 	GLuint ID;
-	ShaderClass( char* vertexFile,  char* fragmentFile);
+	ShaderClass(const char* vertexFile,const  char* fragmentFile);
 
 	void Activate();
 	void Delete();
