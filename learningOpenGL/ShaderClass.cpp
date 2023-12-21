@@ -26,6 +26,8 @@ ShaderClass::ShaderClass(const char* vertexFile,const char* fragmentFile) {
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
     glCompileShader(vertexShader);
+    //check shader compilation
+
     // check for shader compile errors
     //int success;
     //char infoLog[512];

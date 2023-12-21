@@ -24,9 +24,6 @@
     <ClCompile Include="learningOpenGL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ExperimentingWithShaders.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,11 +45,11 @@
     <ClCompile Include="stb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ExperimentingWithShaders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -68,12 +65,21 @@
     <ClInclude Include="VAO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TextureClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\Downloads\awesomeface.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\..\..\..\Downloads\angryCheryl.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="..\..\..\..\Downloads\greggor.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="triangleGreggor.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
   </ItemGroup>

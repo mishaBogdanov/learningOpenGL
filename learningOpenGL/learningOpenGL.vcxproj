@@ -137,23 +137,25 @@
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="ExperimentingWithShaders.cpp" />
     <ClCompile Include="learningOpenGL.cpp" />
-    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
     <ClCompile Include="stb.cpp" />
+    <ClCompile Include="TextureClass.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EBO.h" />
     <ClInclude Include="ExperimentingWithShaders.h" />
-    <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderClass.h" />
+    <ClInclude Include="TextureClass.h" />
     <ClInclude Include="VAO.h" />
     <ClInclude Include="VBO.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\Downloads\angryCheryl.png" />
     <Image Include="..\..\..\..\Downloads\awesomeface.png" />
+    <Image Include="..\..\..\..\Downloads\greggor.png" />
+    <Image Include="triangleGreggor.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="default.frag" />
