@@ -13,14 +13,17 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include <windows.h>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 400;
+const unsigned int SCR_HEIGHT = 140;
+const unsigned int xScale = 2;
+bool isConsole = true;
 
 
 ExperimentingWithShaders::ExperimentingWithShaders() {
@@ -37,6 +40,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 	// glfw window creation
 	// --------------------
+	//GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
@@ -106,6 +110,12 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	glEnable(GL_DEPTH_TEST);
 
 
+	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+	SetConsoleActiveScreenBuffer(hConsole);
+	DWORD dwBytesWritten = 0;
+	wchar_t* screen = new wchar_t[SCR_WIDTH * SCR_HEIGHT + 1];
+
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// input
@@ -114,7 +124,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 		// render
 		// ------
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// be sure to activate the shader before any calls to glUniform
@@ -127,8 +137,8 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 		rotation += (glfwGetTime() - currentTime) * omiga;
 		currentTime = glfwGetTime();
-		
-		
+
+
 
 
 		// ===========================================================================================
@@ -138,7 +148,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		glm::mat4 proj = glm::mat4(1.0f);
 		model = glm::rotate(model, glm::radians(rotation), glm::vec3(1.0f, 1.0f, 0.0f));
 		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
-		proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+		proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / SCR_HEIGHT / xScale, 0.1f, 100.0f);
 
 		int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -156,10 +166,61 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		VAO1.Bind();
 
 		// render the triangle
-		glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(int), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
+		
+		//std::cout << "r: " << (pixels[0]) << '\n';
 
-		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-		// -------------------------------------------------------------------------------
+
+
+		if (isConsole) {
+			float pixels[SCR_WIDTH * SCR_HEIGHT*3] = { 0 };
+			glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, pixels);
+			for (int i = 0; i < SCR_WIDTH * SCR_HEIGHT*3; i+=3) {
+				int pos=0;
+				if (i / 3 / SCR_WIDTH == 0) {
+					pos = (SCR_HEIGHT-1) * SCR_WIDTH + i / 3;
+					//std::cout << i / 3;
+				}
+				else {
+					pos = (SCR_HEIGHT - (i / 3 / SCR_WIDTH)-1)*SCR_WIDTH + ((i / 3) % SCR_WIDTH);
+					//std::cout << pos;
+				}
+				float colorValue = pixels[i] + pixels[i + 1] + pixels[i + 2];
+				if (colorValue < 0.01) {
+					screen[pos] = '.';
+				}
+				else if (colorValue < 0.01) {
+					screen[pos] = ',';
+				}
+				else if (colorValue < 0.3) {
+					screen[pos] = '"';
+				}
+				else if (colorValue < 1) {
+					screen[pos] = ':';
+				}
+				else if (colorValue < 1.5) {
+					screen[pos] = 'i';
+				}
+				else if (colorValue < 2) {
+					screen[pos] = 0x2588;
+				}
+				else if (colorValue < 2.5) {
+					screen[pos] = 0x2588;
+				}
+				else {
+					screen[pos] = 0x2588;
+				}
+
+			}
+			//system("CLS");
+			screen[SCR_WIDTH * SCR_HEIGHT] = '\0';
+			WriteConsoleOutputCharacter(hConsole, screen, SCR_WIDTH * SCR_HEIGHT, { 0,0 }, &dwBytesWritten);
+		}
+
+
+
+
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
