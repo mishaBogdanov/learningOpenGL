@@ -20,13 +20,19 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
 // settings
-const unsigned int SCR_WIDTH = 400;
-const unsigned int SCR_HEIGHT = 140;
-const unsigned int xScale = 2;
-bool isConsole = true;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 400;
+const unsigned int xScale = 1;
+bool isConsole = false;
+
+//const unsigned int SCR_WIDTH = 800;
+//const unsigned int SCR_HEIGHT = 500;
+//const unsigned int xScale = 1;
+//bool isConsole = true;
 
 
 ExperimentingWithShaders::ExperimentingWithShaders() {
+
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
@@ -110,10 +116,11 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	glEnable(GL_DEPTH_TEST);
 
 
-	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-	SetConsoleActiveScreenBuffer(hConsole);
-	DWORD dwBytesWritten = 0;
-	wchar_t* screen = new wchar_t[SCR_WIDTH * SCR_HEIGHT + 1];
+	//HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+	//SetConsoleActiveScreenBuffer(hConsole);
+	//DWORD dwBytesWritten = 0;
+	//wchar_t* screen = new wchar_t[20];
+	std::cout<<glGetString(GL_VERSION);
 
 
 	while (!glfwWindowShouldClose(window))
@@ -172,50 +179,50 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 
 
-		if (isConsole) {
-			float pixels[SCR_WIDTH * SCR_HEIGHT*3] = { 0 };
-			glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, pixels);
-			for (int i = 0; i < SCR_WIDTH * SCR_HEIGHT*3; i+=3) {
-				int pos=0;
-				if (i / 3 / SCR_WIDTH == 0) {
-					pos = (SCR_HEIGHT-1) * SCR_WIDTH + i / 3;
-					//std::cout << i / 3;
-				}
-				else {
-					pos = (SCR_HEIGHT - (i / 3 / SCR_WIDTH)-1)*SCR_WIDTH + ((i / 3) % SCR_WIDTH);
-					//std::cout << pos;
-				}
-				float colorValue = pixels[i] + pixels[i + 1] + pixels[i + 2];
-				if (colorValue < 0.01) {
-					screen[pos] = '.';
-				}
-				else if (colorValue < 0.01) {
-					screen[pos] = ',';
-				}
-				else if (colorValue < 0.3) {
-					screen[pos] = '"';
-				}
-				else if (colorValue < 1) {
-					screen[pos] = ':';
-				}
-				else if (colorValue < 1.5) {
-					screen[pos] = 'i';
-				}
-				else if (colorValue < 2) {
-					screen[pos] = 0x2588;
-				}
-				else if (colorValue < 2.5) {
-					screen[pos] = 0x2588;
-				}
-				else {
-					screen[pos] = 0x2588;
-				}
+		//if (isConsole) {
+		//	float pixels[SCR_WIDTH * SCR_HEIGHT*3] = { 0 };
+		//	glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, pixels);
+		//	for (int i = 0; i < SCR_WIDTH * SCR_HEIGHT*3; i+=3) {
+		//		int pos=0;
+		//		if (i / 3 / SCR_WIDTH == 0) {
+		//			pos = (SCR_HEIGHT-1) * SCR_WIDTH + i / 3;
+		//			//std::cout << i / 3;
+		//		}
+		//		else {
+		//			pos = (SCR_HEIGHT - (i / 3 / SCR_WIDTH)-1)*SCR_WIDTH + ((i / 3) % SCR_WIDTH);
+		//			//std::cout << pos;
+		//		}
+		//		float colorValue = pixels[i] + pixels[i + 1] + pixels[i + 2];
+		//		if (colorValue < 0.01) {
+		//			screen[pos] = '.';
+		//		}
+		//		else if (colorValue < 0.01) {
+		//			screen[pos] = ',';
+		//		}
+		//		else if (colorValue < 0.3) {
+		//			screen[pos] = '"';
+		//		}
+		//		else if (colorValue < 1) {
+		//			screen[pos] = ':';
+		//		}
+		//		else if (colorValue < 1.5) {
+		//			screen[pos] = 'i';
+		//		}
+		//		else if (colorValue < 2) {
+		//			screen[pos] = 0x2588;
+		//		}
+		//		else if (colorValue < 2.5) {
+		//			screen[pos] = 0x2588;
+		//		}
+		//		else {
+		//			screen[pos] = 0x2588;
+		//		}
 
-			}
-			//system("CLS");
-			screen[SCR_WIDTH * SCR_HEIGHT] = '\0';
-			WriteConsoleOutputCharacter(hConsole, screen, SCR_WIDTH * SCR_HEIGHT, { 0,0 }, &dwBytesWritten);
-		}
+		//	}
+		//	//system("CLS");
+		//	screen[SCR_WIDTH * SCR_HEIGHT] = '\0';
+		//	WriteConsoleOutputCharacter(hConsole, screen, SCR_WIDTH * SCR_HEIGHT, { 0,0 }, &dwBytesWritten);
+		//}
 
 
 
