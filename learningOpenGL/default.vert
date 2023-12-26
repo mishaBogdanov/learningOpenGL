@@ -3,20 +3,23 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 color;
 layout (location = 2) in vec2 coordinates;
 
-out vec4 return_color;
-out vec2 texture_coordinates;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+uniform mat4 camMatrix;
 
 
 uniform float scale;
 
+out DATA
+{
+	vec2 texCoordinates;
+	mat4 cameraMatrix;
+} data_out;
+
 
 void main()
 {
-	gl_Position = proj * view * model * vec4(aPos*(scale*2+0.5), 1.0);
-	return_color=vec4(color, 1.0f);
-	texture_coordinates = coordinates;
+	gl_Position = vec4(aPos, 1.0);
+	
+	data_out.texCoordinates = coordinates;
+	data_out.cameraMatrix = camMatrix;
 }

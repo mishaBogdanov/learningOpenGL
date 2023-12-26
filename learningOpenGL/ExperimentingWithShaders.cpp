@@ -14,19 +14,20 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include <windows.h>
+#include "Camera.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 400;
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 800;
 const unsigned int xScale = 1;
 bool isConsole = false;
 
-//const unsigned int SCR_WIDTH = 800;
-//const unsigned int SCR_HEIGHT = 500;
+//const unsigned int SCR_WIDTH = 200;
+//const unsigned int SCR_HEIGHT = 100;
 //const unsigned int xScale = 1;
 //bool isConsole = true;
 
@@ -87,7 +88,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 	TextureClass tex1("triangleGreggor.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 
-	ShaderClass shaderProgram("default.vert", "default.frag");
+	ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
 
 	VAO VAO1;
 	VAO1.Bind();
@@ -119,8 +120,15 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	//HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	//SetConsoleActiveScreenBuffer(hConsole);
 	//DWORD dwBytesWritten = 0;
-	//wchar_t* screen = new wchar_t[20];
-	std::cout<<glGetString(GL_VERSION);
+	//wchar_t* screen = new wchar_t[SCR_WIDTH*SCR_HEIGHT+1];
+	//float pixels[SCR_WIDTH * SCR_HEIGHT * 3] = { 0 };
+
+
+
+
+
+	Camera camera(SCR_WIDTH, SCR_HEIGHT, 1, glm::vec3(0.0f, 0.0f, 2.0f));
+
 
 
 	while (!glfwWindowShouldClose(window))
@@ -138,33 +146,15 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		shaderProgram.Activate();
 		float timeValue = glfwGetTime();
 		float greenValue = sin(timeValue * 2) / 2.0f + 0.5f;
-		glUniform1f(uniID, greenValue);
+		glUniform1f(uniID, 1);
 		//glBindTexture(GL_TEXTURE_2D, texture);
 		tex1.Bind();
 
 		rotation += (glfwGetTime() - currentTime) * omiga;
 		currentTime = glfwGetTime();
 
-
-
-
-		// ===========================================================================================
-		// MATRIX
-		glm::mat4 model = glm::mat4(1.0f); // E matrix :)
-		glm::mat4 view = glm::mat4(1.0f);
-		glm::mat4 proj = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians(rotation), glm::vec3(1.0f, 1.0f, 0.0f));
-		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
-		proj = glm::perspective(glm::radians(90.0f), (float)SCR_WIDTH / SCR_HEIGHT / xScale, 0.1f, 100.0f);
-
-		int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		int modelView = glGetUniformLocation(shaderProgram.ID, "view");
-		glUniformMatrix4fv(modelView, 1, GL_FALSE, glm::value_ptr(view));
-
-		int modelProj = glGetUniformLocation(shaderProgram.ID, "proj");
-		glUniformMatrix4fv(modelProj, 1, GL_FALSE, glm::value_ptr(proj));
-		//=================================================================================================
+		camera.setMatrix(90.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
+		
 
 
 
@@ -174,13 +164,12 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 		// render the triangle
 		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
-		
+
 		//std::cout << "r: " << (pixels[0]) << '\n';
 
 
 
 		//if (isConsole) {
-		//	float pixels[SCR_WIDTH * SCR_HEIGHT*3] = { 0 };
 		//	glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, pixels);
 		//	for (int i = 0; i < SCR_WIDTH * SCR_HEIGHT*3; i+=3) {
 		//		int pos=0;
@@ -217,9 +206,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		//		else {
 		//			screen[pos] = 0x2588;
 		//		}
-
 		//	}
-		//	//system("CLS");
 		//	screen[SCR_WIDTH * SCR_HEIGHT] = '\0';
 		//	WriteConsoleOutputCharacter(hConsole, screen, SCR_WIDTH * SCR_HEIGHT, { 0,0 }, &dwBytesWritten);
 		//}
@@ -227,7 +214,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 
 
-
+		camera.Inputs(window);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

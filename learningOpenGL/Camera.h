@@ -5,6 +5,7 @@
 #include "ShaderClass.h"
 
 
+
 class Camera
 {
 private:
@@ -14,8 +15,11 @@ private:
 	int width;
 	int height;
 	float speed;
-	float sensitivey = 100.0f;
+	float sensitivity = 100.0f;
 	float xScale;
+	bool firstClick = true;
+	bool isInGame = true;
+	double currentTime;
 public:
 	Camera(int widht, int height, float gxScale, glm::vec3 gPosition);
 

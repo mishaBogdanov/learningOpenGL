@@ -11,9 +11,11 @@ class ShaderClass
 public:
 	GLuint ID;
 	ShaderClass(const char* vertexFile,const  char* fragmentFile);
+	ShaderClass(const char* vertexFile, const char* geometryShader, const  char* fragmentFile);
 
 	void Activate();
 	void Delete();
+	void compileErrors(unsigned int shader, const char* type);
 
 };
 
