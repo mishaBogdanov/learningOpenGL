@@ -23,7 +23,7 @@ private:
 public:
 	Camera(int widht, int height, float gxScale, glm::vec3 gPosition);
 
-	void setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader, const char* uniform);
+	void setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader, const char* uniform, const char* uniform2, const char* uniformFacing);
 	void Inputs(GLFWwindow* window);
 };
 

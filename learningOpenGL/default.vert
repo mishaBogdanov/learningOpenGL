@@ -5,6 +5,8 @@ layout (location = 2) in vec2 coordinates;
 
 
 uniform mat4 camMatrix;
+uniform mat4 translationMatrix;
+uniform vec3 facing;
 
 
 uniform float scale;
@@ -13,6 +15,8 @@ out DATA
 {
 	vec2 texCoordinates;
 	mat4 cameraMatrix;
+	mat4 given_translation_matrix;
+	vec3 facingDirection;
 } data_out;
 
 
@@ -22,4 +26,6 @@ void main()
 	
 	data_out.texCoordinates = coordinates;
 	data_out.cameraMatrix = camMatrix;
+	data_out.given_translation_matrix = translationMatrix;
+	data_out.facingDirection = facing;
 }

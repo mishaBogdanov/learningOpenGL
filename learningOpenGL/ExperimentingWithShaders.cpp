@@ -48,6 +48,10 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	// glfw window creation
 	// --------------------
 	//GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+	//if (isConsole) {
+	//	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+	//}
+
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
@@ -78,8 +82,8 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	// Indices for vertices order
 	GLuint indices[] =
 	{
-		0, 1, 2,
-		0, 2, 3,
+		2, 1, 0,
+		3, 2, 0,
 		0, 1, 4,
 		1, 2, 4,
 		2, 3, 4,
@@ -153,7 +157,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		rotation += (glfwGetTime() - currentTime) * omiga;
 		currentTime = glfwGetTime();
 
-		camera.setMatrix(90.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
+		camera.setMatrix(90.0f, 0.1f, 100.0f, shaderProgram, "camMatrix", "translationMatrix", "facing");
 		
 
 
@@ -182,26 +186,26 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		//			//std::cout << pos;
 		//		}
 		//		float colorValue = pixels[i] + pixels[i + 1] + pixels[i + 2];
-		//		if (colorValue < 0.01) {
+		//		if (colorValue < 0.1) {
 		//			screen[pos] = '.';
 		//		}
-		//		else if (colorValue < 0.01) {
+		//		else if (colorValue < 0.6) {
 		//			screen[pos] = ',';
 		//		}
-		//		else if (colorValue < 0.3) {
+		//		else if (colorValue < 1.2) {
 		//			screen[pos] = '"';
 		//		}
-		//		else if (colorValue < 1) {
+		//		else if (colorValue < 1.8) {
 		//			screen[pos] = ':';
 		//		}
-		//		else if (colorValue < 1.5) {
+		//		else if (colorValue < 2.2) {
 		//			screen[pos] = 'i';
 		//		}
-		//		else if (colorValue < 2) {
-		//			screen[pos] = 0x2588;
+		//		else if (colorValue < 2.6) {
+		//			screen[pos] = 0x2592;
 		//		}
-		//		else if (colorValue < 2.5) {
-		//			screen[pos] = 0x2588;
+		//		else if (colorValue < 8) {
+		//			screen[pos] = 0x2593;
 		//		}
 		//		else {
 		//			screen[pos] = 0x2588;
