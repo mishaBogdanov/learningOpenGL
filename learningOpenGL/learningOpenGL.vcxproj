@@ -138,6 +138,8 @@
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="ExperimentingWithShaders.cpp" />
     <ClCompile Include="learningOpenGL.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="TextureClass.cpp" />
@@ -148,6 +150,9 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EBO.h" />
     <ClInclude Include="ExperimentingWithShaders.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ShaderClass.h" />
     <ClInclude Include="TextureClass.h" />
     <ClInclude Include="VAO.h" />
@@ -163,6 +168,12 @@
     <None Include="default.frag" />
     <None Include="default.geom" />
     <None Include="default.vert" />
+    <None Include="outline.frag" />
+    <None Include="outline.geom" />
+    <None Include="TeslaTruck.object" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="learningOpenGL.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

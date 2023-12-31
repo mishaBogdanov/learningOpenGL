@@ -7,15 +7,12 @@ layout (triangle_strip, max_vertices =3) out;
 
 
 out vec4 givenColor;
-out vec2 texture_coordinates;
 
 
 in DATA
 {
-	vec2 texCoordinates;
 	mat4 cameraMatrix;
 	mat4 given_translation_matrix;
-	vec3 facingDirection;
 } data_in[];
 
 void main()
@@ -39,16 +36,13 @@ void main()
 
 	gl_Position = data_in[0].cameraMatrix * position0;
 	givenColor = vec4(color, color, color, 1.0);
-	texture_coordinates = data_in[0].texCoordinates;
 	EmitVertex();
 
 	gl_Position = data_in[1].cameraMatrix * position1;
-	texture_coordinates = data_in[1].texCoordinates;
 	givenColor = vec4(color, color, color, 1.0);
 	EmitVertex();
 
 	gl_Position = data_in[2].cameraMatrix * position2;
-	texture_coordinates = data_in[2].texCoordinates;
 	givenColor = vec4(color, color, color, 1.0);
 	EmitVertex();
 

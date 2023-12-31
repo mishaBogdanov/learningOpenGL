@@ -16,16 +16,12 @@ Camera::Camera(int gWidth, int gHeight, float gxScale, glm::vec3 gPosition) {
 	currentTime = glfwGetTime();
 }
 
-void Camera::setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader, const char* uniform, const char * uniform2, const char * uniformFacing) {
-	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 projection = glm::mat4(1.0f);
+void Camera::setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader) {
+	camMatrix = glm::mat4(1.0f);
+	translationMatrix = glm::mat4(1.0f);
 
-	view = glm::lookAt(position, position + Orientation, Up);
-	projection = glm::perspective(glm::radians(FOVdeg), (float)width / height / xScale, nearPlane, farPlane);
-
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection));
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform2), 1, GL_FALSE, glm::value_ptr(view));
-	glUniform3f(glGetUniformLocation(shader.ID, uniformFacing), Orientation.x, Orientation.y, Orientation.z)  ;
+	camMatrix = glm::lookAt(position, position + Orientation, Up);
+	translationMatrix = glm::perspective(glm::radians(FOVdeg), (float)width / height / xScale, nearPlane, farPlane);
 }
 
 
@@ -85,4 +81,10 @@ void Camera::Inputs(GLFWwindow* window) {
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, (width / 2), (height / 2));
 	}
+}
+
+void Camera::Matrix(ShaderClass& shader) {
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "translationMatrix"), 1, GL_FALSE, glm::value_ptr(camMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(translationMatrix));
+
 }

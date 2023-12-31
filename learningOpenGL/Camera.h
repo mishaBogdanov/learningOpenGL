@@ -20,10 +20,13 @@ private:
 	bool firstClick = true;
 	bool isInGame = true;
 	double currentTime;
+	glm::mat4 camMatrix;
+	glm::mat4 translationMatrix;
 public:
 	Camera(int widht, int height, float gxScale, glm::vec3 gPosition);
 
-	void setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader, const char* uniform, const char* uniform2, const char* uniformFacing);
+	void setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader);
 	void Inputs(GLFWwindow* window);
+	void Matrix(ShaderClass& shader);
 };
 
