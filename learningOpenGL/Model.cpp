@@ -1,61 +1,17 @@
 #include "Model.h"
 #pragma warning(disable:4996)
 #include "Mesh.h"
+#include <iostream>
+#include <cstdio>
 
+
+int tests(std::string given);
 
 Model::Model(std::string location) {
 	load(location);
+	//tests("TeslaTruck.object");
 }
 
-bool Model::load(std::string opening) {
-	int curZero = 0;
-	std::vector<glm::vec3> Vertices = {};
-	std::vector<GLuint> Indices = {};
-	FILE* file = fopen(opening.c_str(), "r");
-	if (file == NULL) {
-		printf("Impossible to open the file !\n");
-		return false;
-	}
-
-	while (1) {
-
-		char lineHeader[128];
-		// read the first word of the line
-		int res = fscanf(file, "%s", lineHeader);
-		if (res == EOF)
-			break;
-
-
-
-		if (strcmp(lineHeader, "v") == 0) {
-			glm::vec3 vertex;
-			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			Vertices.push_back(vertex);
-		}
-		else if (strcmp(lineHeader, "f") == 0) {
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			//if (matches != 9) {
-			//	printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-			//	return false;
-			//}
-			Indices.push_back(vertexIndex[0]);
-			Indices.push_back(vertexIndex[1]);
-			Indices.push_back(vertexIndex[2]);
-		}
-		else if (strcmp(lineHeader, "o") == 0) {
-			std::cout << "here";
-
-			Mesh newMesh = Mesh(Vertices, Indices);
-
-			mesh.push_back(newMesh);
-
-			Vertices.clear();
-			Indices.clear();
-		}
-	}
-}
 
 
 void Model::Draw(ShaderClass & shader, ShaderClass & shader2, Camera cam) {
@@ -63,4 +19,75 @@ void Model::Draw(ShaderClass & shader, ShaderClass & shader2, Camera cam) {
 		mesh[i].Draw(shader, cam);
 		mesh[i].Draw(shader2, cam);
 	}
+}
+
+
+
+
+
+bool Model::load(std::string given) {
+
+	std::ifstream file(given);
+	std::vector<glm::vec3> Vertices = {};
+	std::vector<GLuint> Indices = {};
+	int currentVertexesNumber = 0;
+	int lastMaxVertexNumber = 1;
+
+	if (file.is_open()) {
+		std::istream_iterator<std::string> fileIterator(file);
+		std::istream_iterator<std::string> endIterator;
+
+		while (fileIterator != endIterator) {
+			if ((*fileIterator) == "v") {
+				currentVertexesNumber += 1;
+				++fileIterator;
+				float val1 = std::stof((*fileIterator));
+				++fileIterator;
+				float val2 = std::stof((*fileIterator));
+				++fileIterator;
+				float val3 = std::stof((*fileIterator));
+				//++fileIterator;
+				Vertices.push_back(glm::vec3(val1, val2, val3));
+			} 
+			else if ((*fileIterator) == "f") {
+				int vertices[3] = { 0,0,0 };
+				for (int k = 0; k < 3; k++) {
+					++fileIterator;
+					char curChar = ' ';
+					std::string current = "";
+					int i = 0;
+					while (curChar != '/') {
+						curChar = (*fileIterator)[i];
+						current += curChar;
+						i++;
+					}
+					vertices[k] = std::stoi(current) - lastMaxVertexNumber;
+				}
+				if (vertices[0] > Vertices.size()-1 || vertices[1] > Vertices.size()-1 || vertices[2] > Vertices.size()-1) {
+					std::cout << "issue";
+				}
+				Indices.push_back(vertices[0]);
+				Indices.push_back(vertices[1]);
+				Indices.push_back(vertices[2]);
+			}
+			else if ((*fileIterator) == "o") {
+				lastMaxVertexNumber = currentVertexesNumber+1;
+				mesh.push_back(Mesh(Vertices, Indices));
+				Vertices.clear();
+				Indices.clear();
+			}
+
+
+			++fileIterator;
+
+		}
+		lastMaxVertexNumber = currentVertexesNumber;
+		mesh.push_back(Mesh(Vertices, Indices));
+		Vertices.clear();
+		Indices.clear();
+
+		file.close();
+	}
+
+	return 0;
 }
