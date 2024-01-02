@@ -94,9 +94,6 @@
     <Image Include="..\..\..\..\Downloads\awesomeface.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\..\..\..\Downloads\angryCheryl.png">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
     <Image Include="..\..\..\..\Downloads\greggor.png">
       <Filter>Resource Files\textures</Filter>
     </Image>

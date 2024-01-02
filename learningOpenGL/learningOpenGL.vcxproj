@@ -158,7 +158,6 @@
     <ClInclude Include="VBO.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\Downloads\angryCheryl.png" />
     <Image Include="..\..\..\..\Downloads\awesomeface.png" />
     <Image Include="..\..\..\..\Downloads\greggor.png" />
     <Image Include="triangleGreggor.png" />
