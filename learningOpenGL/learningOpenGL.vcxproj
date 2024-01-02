@@ -152,7 +152,6 @@
     <ClInclude Include="ExperimentingWithShaders.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="ShaderClass.h" />
     <ClInclude Include="TextureClass.h" />
     <ClInclude Include="VAO.h" />
@@ -168,6 +167,7 @@
     <None Include="default.frag" />
     <None Include="default.geom" />
     <None Include="default.vert" />
+    <None Include="dust2.object" />
     <None Include="outline.frag" />
     <None Include="outline.geom" />
     <None Include="TeslaTruck.object" />

@@ -135,7 +135,8 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	glEnable(GL_DEPTH_TEST);
 
 	Model cyber = Model("TeslaTruck.object");
-
+	glm::vec3 velocity = glm::vec3(0, 0, 1);
+	cyber.setVelocity(velocity);
 
 	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	SetConsoleActiveScreenBuffer(hConsole);
@@ -151,9 +152,13 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 	Camera camera(SCR_WIDTH, SCR_HEIGHT * xScale, 1, glm::vec3(0.0f, 0.0f, 2.0f));
 
+	double t = glfwGetTime();
+
 
 	while (!glfwWindowShouldClose(window))
 	{
+		double deltaT = glfwGetTime() - t;
+		t = glfwGetTime();
 		// input
 		// -----
 		processInput(window);
@@ -169,7 +174,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		tex1.Bind();
 
 
-		camera.setMatrix(90.0f, 0.1f, 100.0f, shaderProgram);
+		camera.setMatrix(90.0f, 0.1f, 300.0f, shaderProgram);
 		
 
 
@@ -191,8 +196,8 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 		//mesh.Draw(shaderProgram, camera);
 		//mesh.Draw(shaderProgram2, camera);
-
-		cyber.Draw(shaderProgram, shaderProgram2, camera);
+		cyber.update(deltaT);
+		cyber.Draw(camera);
 
 
 		if (isConsole) {

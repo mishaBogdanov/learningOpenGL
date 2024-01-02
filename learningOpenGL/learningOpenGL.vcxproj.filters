@@ -89,9 +89,6 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\Downloads\awesomeface.png">
@@ -124,6 +121,9 @@
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="TeslaTruck.object">
+      <Filter>Resource Files\models</Filter>
+    </None>
+    <None Include="dust2.object">
       <Filter>Resource Files\models</Filter>
     </None>
   </ItemGroup>

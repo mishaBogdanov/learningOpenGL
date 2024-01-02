@@ -11,15 +11,12 @@ Camera::Camera(int gWidth, int gHeight, float gxScale, glm::vec3 gPosition) {
 	width = gWidth;
 	height = gHeight;
 	xScale = gxScale;
-	speed = 1;
-	sensitivity = 500;
+	speed = 10;
+	sensitivity = 100;
 	currentTime = glfwGetTime();
 }
 
 void Camera::setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader) {
-	camMatrix = glm::mat4(1.0f);
-	translationMatrix = glm::mat4(1.0f);
-
 	camMatrix = glm::lookAt(position, position + Orientation, Up);
 	translationMatrix = glm::perspective(glm::radians(FOVdeg), (float)width / height / xScale, nearPlane, farPlane);
 }
@@ -84,7 +81,10 @@ void Camera::Inputs(GLFWwindow* window) {
 }
 
 void Camera::Matrix(ShaderClass& shader) {
+
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "translationMatrix"), 1, GL_FALSE, glm::value_ptr(camMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(translationMatrix));
 
 }
+
+

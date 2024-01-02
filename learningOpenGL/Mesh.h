@@ -26,6 +26,14 @@ class Mesh
 public:
 	std::vector <glm::vec3> vertices;
 	std::vector <GLuint> indices;
+	glm::vec3 pos;
+	glm::mat4 translation;
+	glm::vec3 facing;
+	glm::vec3 velocity;
+	glm::vec3 angularVelocityDirection;
+	float angularVelocity;
+	float mass;
+	
 
 	VAO vao;
 
@@ -33,5 +41,11 @@ public:
 
 	void Draw(ShaderClass& shader, Camera& camera);
 	void Draw(ShaderClass& shader, ShaderClass & shader2, Camera& camera);
+
+	void update(float deltaT);
+	void setVelocity(glm::vec3 givenV);
+	void scaleVelocity(float scale);
+	void updateTransLocation(glm::mat4& given, ShaderClass& shader);
+
 };
 

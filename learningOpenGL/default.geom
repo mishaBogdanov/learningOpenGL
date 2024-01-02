@@ -13,14 +13,16 @@ in DATA
 {
 	mat4 cameraMatrix;
 	mat4 given_translation_matrix;
+	mat4 posMatrix;
+
 } data_in[];
 
 void main()
 {
 
-	vec4 position0 = data_in[0].given_translation_matrix * gl_in[0].gl_Position;
-	vec4 position1 = data_in[1].given_translation_matrix * gl_in[1].gl_Position;
-	vec4 position2 = data_in[2].given_translation_matrix * gl_in[2].gl_Position;
+	vec4 position0 = data_in[0].given_translation_matrix * data_in[0].posMatrix * gl_in[0].gl_Position;
+	vec4 position1 = data_in[1].given_translation_matrix * data_in[1].posMatrix * gl_in[1].gl_Position;
+	vec4 position2 = data_in[2].given_translation_matrix * data_in[2].posMatrix * gl_in[2].gl_Position;
 
 
 
