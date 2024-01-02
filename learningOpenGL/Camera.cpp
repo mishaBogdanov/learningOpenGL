@@ -11,7 +11,7 @@ Camera::Camera(int gWidth, int gHeight, float gxScale, glm::vec3 gPosition) {
 	width = gWidth;
 	height = gHeight;
 	xScale = gxScale;
-	speed = 10;
+	speed = 100;
 	sensitivity = 100;
 	currentTime = glfwGetTime();
 }

@@ -10,7 +10,21 @@
 
 
 Model::Model(std::string location) {
-	load(location);
+	load(location, 1);
+	translation = glm::mat4(1);
+	velocity = glm::vec3(0, 0, 0);
+	angularVelocityDirection = glm::vec3(1, 0, 0);
+	angularVelocity = 0;
+	ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
+	ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
+	shaders.push_back(shaderProgram);
+	shaders.push_back(shaderProgram2);
+
+
+}
+
+Model::Model(std::string location, float scale) {
+	load(location, scale);
 	translation = glm::mat4(1);
 	velocity = glm::vec3(0, 0, 0);
 	angularVelocityDirection = glm::vec3(1, 0, 0);
@@ -62,7 +76,7 @@ void Model::scaleVelocity(float g) {
 
 
 
-bool Model::load(std::string given) {
+bool Model::load(std::string given, float scale) {
 
 	std::ifstream file(given);
 	std::vector<glm::vec3> Vertices = {};
@@ -84,7 +98,9 @@ bool Model::load(std::string given) {
 				++fileIterator;
 				float val3 = std::stof((*fileIterator));
 				//++fileIterator;
-				Vertices.push_back(glm::vec3(val1, val2, val3));
+
+
+				Vertices.push_back(glm::vec3(val1, val2, val3) * scale);
 			}
 			else if ((*fileIterator) == "f") {
 				int vertices[3] = { 0,0,0 };

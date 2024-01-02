@@ -11,7 +11,7 @@ class Model
 {
 private:
 	std::vector<Mesh> mesh;
-	bool load( std::string opening);
+	bool load( std::string opening, float scale);
 	glm::vec3 pos;
 	glm::mat4 translation;
 	glm::vec3 facing;
@@ -20,13 +20,18 @@ private:
 	glm::vec3 angularVelocityDirection;
 	double angularVelocity;
 	std::vector<ShaderClass> shaders;
+
+
+	glm::vec3 corners[8];
 public:
 	Model(std::string filepath);
+	Model(std::string filepath, float scale);
 	void Draw(ShaderClass& shader, ShaderClass& shader2, Camera cam);
 	void Draw(Camera cam);
 
 	void update(float deltaT);
 	void setVelocity(glm::vec3 &givenV);
 	void scaleVelocity(float scale);
+	void setPosition(glm::vec3 givenPos);
 };
 

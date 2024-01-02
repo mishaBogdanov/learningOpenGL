@@ -134,9 +134,14 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	Model cyber = Model("TeslaTruck.object");
+	Model cyber = Model("TeslaTruck.object", 10);
+	Model cyber2 = Model("TeslaTruck.object");
+
 	glm::vec3 velocity = glm::vec3(0, 0, 1);
+	glm::vec3 velocity2 = glm::vec3(0, 0, -1);
+
 	cyber.setVelocity(velocity);
+	cyber2.setVelocity(velocity2);
 
 	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	SetConsoleActiveScreenBuffer(hConsole);
@@ -169,9 +174,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// be sure to activate the shader before any calls to glUniform
-		shaderProgram.Activate();
 		//glBindTexture(GL_TEXTURE_2D, texture);
-		tex1.Bind();
 
 
 		camera.setMatrix(90.0f, 0.1f, 300.0f, shaderProgram);
@@ -198,6 +201,8 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		//mesh.Draw(shaderProgram2, camera);
 		cyber.update(deltaT);
 		cyber.Draw(camera);
+		cyber2.update(deltaT);
+		cyber2.Draw(camera);
 
 
 		if (isConsole) {
