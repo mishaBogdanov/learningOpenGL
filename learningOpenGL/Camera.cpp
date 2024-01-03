@@ -17,8 +17,8 @@ Camera::Camera(int gWidth, int gHeight, float gxScale, glm::vec3 gPosition) {
 }
 
 void Camera::setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader) {
-	camMatrix = glm::lookAt(position, position + Orientation, Up);
-	translationMatrix = glm::perspective(glm::radians(FOVdeg), (float)width / height / xScale, nearPlane, farPlane);
+	translationMatrix = glm::lookAt(position, position + Orientation, Up);
+	camMatrix = glm::perspective(glm::radians(FOVdeg), (float)width / height / xScale, nearPlane, farPlane);
 }
 
 
@@ -60,7 +60,7 @@ void Camera::Inputs(GLFWwindow* window) {
 
 		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
 		// and then "transforms" them into degrees 
-		float rotX = (deltaT* sensitivity) * (float)(mouseY - (height / 2));
+		float rotX = (deltaT * sensitivity) * (float)(mouseY - (height / 2));
 		float rotY = (deltaT * sensitivity) * (float)(mouseX - (width / 2));
 
 		// Calculates upcoming vertical change in the Orientation
@@ -82,8 +82,8 @@ void Camera::Inputs(GLFWwindow* window) {
 
 void Camera::Matrix(ShaderClass& shader) {
 
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "translationMatrix"), 1, GL_FALSE, glm::value_ptr(camMatrix));
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(translationMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "translationMatrix"), 1, GL_FALSE, glm::value_ptr(translationMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(camMatrix));
 
 }
 

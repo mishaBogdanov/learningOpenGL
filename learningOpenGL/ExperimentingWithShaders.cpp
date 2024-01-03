@@ -18,6 +18,7 @@
 #include <vector>
 #include "Mesh.h"
 #include "Model.h"
+#include "floor.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -137,7 +138,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	Model cyber = Model("TeslaTruck.object", 10);
 	Model cyber2 = Model("TeslaTruck.object");
 
-	glm::vec3 velocity = glm::vec3(0, 0, 1);
+	glm::vec3 velocity = glm::vec3(0, 0, 100);
 	glm::vec3 velocity2 = glm::vec3(0, 0, -1);
 
 	cyber.setVelocity(velocity);
@@ -158,6 +159,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	Camera camera(SCR_WIDTH, SCR_HEIGHT * xScale, 1, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	double t = glfwGetTime();
+	Floor floor = Floor(10, 100, 0, 0, 0);
 
 
 	while (!glfwWindowShouldClose(window))
@@ -203,8 +205,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		cyber.Draw(camera);
 		cyber2.update(deltaT);
 		cyber2.Draw(camera);
-
-
+		floor.Draw(camera);
 		if (isConsole) {
 			glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, pixels);
 			for (int i = 0; i < SCR_WIDTH * SCR_HEIGHT*3; i+=3) {

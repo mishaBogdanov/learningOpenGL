@@ -60,6 +60,9 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="floor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExperimentingWithShaders.h">
@@ -87,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="floor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -122,6 +128,21 @@
     </None>
     <None Include="dust2.object">
       <Filter>Resource Files\models</Filter>
+    </None>
+    <None Include="floor.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="floor.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="floorOutline.geom">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="floorFill.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="floorFill.vert">
+      <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

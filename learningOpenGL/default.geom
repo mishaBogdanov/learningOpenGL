@@ -33,7 +33,7 @@ void main()
 	vec3 vector0 = vec3(position0.x-position1.x, position0.y-position1.y, position0.z-position1.z );
 	vec3 vector1 = vec3(position2.x-position1.x, position2.y-position1.y, position2.z-position1.z);
 	vec3 normal = vec3(normalize(cross(vector0, vector1)));
-	float color = abs(dot(normal, vec3(0,0,1)));
+	float color = - dot(normal, vec3(0,0,1));
 
 
 	gl_Position = data_in[0].cameraMatrix * position0;
