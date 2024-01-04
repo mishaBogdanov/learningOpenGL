@@ -14,6 +14,9 @@ private:
 	bool load( std::string opening, float scale);
 	glm::vec3 pos;
 	glm::mat4 translation;
+
+
+
 	glm::vec3 facing;
 	glm::vec3 up;
 	glm::vec3 velocity;
@@ -21,13 +24,16 @@ private:
 	double angularVelocity;
 	std::vector<ShaderClass> shaders;
 
-
 	glm::vec3 corners[8];
+	glm::vec3 cm;
+
+	void setupModel();
 public:
 	Model(std::string filepath);
 	Model(std::string filepath, float scale);
 	void Draw(ShaderClass& shader, ShaderClass& shader2, Camera cam);
 	void Draw(Camera cam);
+	glm::mat4 getTransformation();
 
 	void update(float deltaT);
 	void setVelocity(glm::vec3 &givenV);

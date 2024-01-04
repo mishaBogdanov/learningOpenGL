@@ -29,7 +29,6 @@ Floor::Floor(int gNum, float gSpacing, float gHeight, float gz, float gx) {
 		Indicies.push_back(i + 1 + i / (num));
 	}
 	for (int i = 0; i < Indicies.size(); i++) {
-		std::cout << Indicies[i] << std::endl;
 	}
 
 	vao.Bind();

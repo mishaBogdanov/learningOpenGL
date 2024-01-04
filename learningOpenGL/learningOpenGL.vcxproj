@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\OneDrive\Desktop\glad.c" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CollisionBox.cpp" />
     <ClCompile Include="EBO.cpp" />
     <ClCompile Include="ExperimentingWithShaders.cpp" />
     <ClCompile Include="floor.cpp" />
@@ -143,21 +144,26 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
     <ClCompile Include="stb.cpp" />
+    <ClCompile Include="SubSpace.cpp" />
     <ClCompile Include="TextureClass.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CollisionBox.h" />
     <ClInclude Include="EBO.h" />
     <ClInclude Include="ExperimentingWithShaders.h" />
     <ClInclude Include="floor.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ShaderClass.h" />
+    <ClInclude Include="SubSpace.h" />
     <ClInclude Include="TextureClass.h" />
     <ClInclude Include="VAO.h" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\Downloads\awesomeface.png" />

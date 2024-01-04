@@ -106,7 +106,6 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	};
 
 	//std::vector<GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
-	std::cout << ind.size();
 	TextureClass tex1("triangleGreggor.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
@@ -138,8 +137,8 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	Model cyber = Model("TeslaTruck.object", 10);
 	Model cyber2 = Model("TeslaTruck.object");
 
-	glm::vec3 velocity = glm::vec3(0, 0, 100);
-	glm::vec3 velocity2 = glm::vec3(0, 0, -1);
+	glm::vec3 velocity = glm::vec3(0, 0, -10);
+	glm::vec3 velocity2 = glm::vec3(0, 0, 0);
 
 	cyber.setVelocity(velocity);
 	cyber2.setVelocity(velocity2);

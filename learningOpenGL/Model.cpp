@@ -11,6 +11,12 @@
 
 Model::Model(std::string location) {
 	load(location, 1);
+	setupModel();
+
+
+}
+
+void Model::setupModel() {
 	translation = glm::mat4(1);
 	velocity = glm::vec3(0, 0, 0);
 	angularVelocityDirection = glm::vec3(1, 0, 0);
@@ -19,23 +25,16 @@ Model::Model(std::string location) {
 	ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
 	shaders.push_back(shaderProgram);
 	shaders.push_back(shaderProgram2);
-
-
 }
 
 Model::Model(std::string location, float scale) {
 	load(location, scale);
-	translation = glm::mat4(1);
-	velocity = glm::vec3(0, 0, 0);
-	angularVelocityDirection = glm::vec3(1, 0, 0);
-	angularVelocity = 0;
-	ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
-	ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
-	shaders.push_back(shaderProgram);
-	shaders.push_back(shaderProgram2);
+	setupModel();
 
 
 }
+
+
 
 
 
@@ -44,6 +43,10 @@ void Model::Draw(ShaderClass& shader, ShaderClass& shader2, Camera cam) {
 		mesh[i].Draw(shader, cam);
 		mesh[i].Draw(shader2, cam);
 	}
+}
+
+glm::mat4 Model::getTransformation() {
+	return glm::translate(glm::mat4(1), cm) * translation;
 }
 
 
@@ -57,11 +60,14 @@ void Model::Draw(Camera cam) {
 }
 
 void Model::update(float deltaT) {
-	translation = glm::translate(translation, velocity * deltaT);
-	translation = glm::rotate(translation, static_cast<float>(glm::radians(angularVelocity * deltaT)), angularVelocityDirection);
+	cm = cm + velocity * deltaT;
+
+	translation = glm::rotate(translation, 0.01f, glm::vec3(0, 1, 1));
+
+
 	for (int k = 0; k < shaders.size(); k++) {
 		shaders[k].Activate();
-		glUniformMatrix4fv(glGetUniformLocation(shaders[k].ID, "positionMatrix"), 1, GL_FALSE, glm::value_ptr(translation));
+		glUniformMatrix4fv(glGetUniformLocation(shaders[k].ID, "positionMatrix"), 1, GL_FALSE, glm::value_ptr(getTransformation()));
 	}
 }
 
@@ -84,23 +90,51 @@ bool Model::load(std::string given, float scale) {
 	int currentVertexesNumber = 0;
 	int lastMaxVertexNumber = 1;
 
+	float PosX, PosY, PosZ, NegX, NegY, NegZ;
+	bool isFirst = true;
+
 	if (file.is_open()) {
 		std::istream_iterator<std::string> fileIterator(file);
 		std::istream_iterator<std::string> endIterator;
 
 		while (fileIterator != endIterator) {
 			if ((*fileIterator) == "v") {
+
 				currentVertexesNumber += 1;
 				++fileIterator;
-				float val1 = std::stof((*fileIterator));
+				float val1 = std::stof((*fileIterator)) * scale;
 				++fileIterator;
-				float val2 = std::stof((*fileIterator));
+				float val2 = std::stof((*fileIterator)) * scale;
 				++fileIterator;
-				float val3 = std::stof((*fileIterator));
-				//++fileIterator;
-
-
-				Vertices.push_back(glm::vec3(val1, val2, val3) * scale);
+				float val3 = std::stof((*fileIterator)) * scale;
+				if (isFirst) {
+					PosX = val1;
+					NegX = val1;
+					PosY = val2;
+					NegY = val2;
+					PosZ = val3;
+					NegZ = val3;
+					isFirst = false;
+				}
+				if (val1 > PosX) {
+					PosX = val1;
+				}
+				if (val2 > PosY) {
+					PosY = val2;
+				}
+				if (val3 > PosZ) {
+					PosZ = val3;
+				}
+				if (val1 < NegX) {
+					NegX = val1;
+				}
+				if (val2 < NegY) {
+					NegY = val2;
+				}
+				if (val3 < NegZ) {
+					NegZ = val3;
+				}
+				Vertices.push_back(glm::vec3(val1, val2, val3));
 			}
 			else if ((*fileIterator) == "f") {
 				int vertices[3] = { 0,0,0 };
@@ -116,9 +150,7 @@ bool Model::load(std::string given, float scale) {
 					}
 					vertices[k] = std::stoi(current) - lastMaxVertexNumber;
 				}
-				if (vertices[0] > Vertices.size() - 1 || vertices[1] > Vertices.size() - 1 || vertices[2] > Vertices.size() - 1) {
-					std::cout << "issue";
-				}
+
 				Indices.push_back(vertices[0]);
 				Indices.push_back(vertices[1]);
 				Indices.push_back(vertices[2]);
@@ -138,6 +170,20 @@ bool Model::load(std::string given, float scale) {
 		mesh.push_back(Mesh(Vertices, Indices));
 		Vertices.clear();
 		Indices.clear();
+		corners[0] = glm::vec3(PosX, PosY, PosZ);
+		corners[1] = glm::vec3(PosX, PosY, NegZ);
+		corners[2] = glm::vec3(PosX, NegY, PosZ);
+		corners[3] = glm::vec3(PosX, NegY, NegZ);
+		corners[4] = glm::vec3(NegX, PosY, PosZ);
+		corners[5] = glm::vec3(NegX, PosY, NegZ);
+		corners[6] = glm::vec3(NegX, NegY, PosZ);
+		corners[7] = glm::vec3(NegX, NegY, NegZ);
+
+		glm::vec3 currentSum = corners[0];
+		for (int i = 1; i < 8; i++) {
+			currentSum += corners[i];
+		}
+		cm = currentSum / 8.0f;
 
 		file.close();
 	}
