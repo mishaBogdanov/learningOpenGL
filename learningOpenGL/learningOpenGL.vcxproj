@@ -142,6 +142,7 @@
     <ClCompile Include="learningOpenGL.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="MyMath.cpp" />
     <ClCompile Include="ShaderClass.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="SubSpace.cpp" />
@@ -158,6 +159,7 @@
     <ClInclude Include="floor.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="MyMath.h" />
     <ClInclude Include="ShaderClass.h" />
     <ClInclude Include="SubSpace.h" />
     <ClInclude Include="TextureClass.h" />

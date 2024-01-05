@@ -25,11 +25,19 @@ void Model::setupModel() {
 	ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
 	shaders.push_back(shaderProgram);
 	shaders.push_back(shaderProgram2);
+	for (int k = 0; k < shaders.size(); k++) {
+		shaders[k].Activate();
+		glUniformMatrix4fv(glGetUniformLocation(shaders[k].ID, "positionMatrix"), 1, GL_FALSE, glm::value_ptr(getTransformation()));
+	}
+	hitboxVectors.push_back(glm::vec3(1, 0, 0));
+	hitboxVectors.push_back(glm::vec3(0, 1, 0));
+	hitboxVectors.push_back(glm::vec3(0, 0, 1));
 }
 
 Model::Model(std::string location, float scale) {
 	load(location, scale);
 	setupModel();
+
 
 
 }
@@ -46,7 +54,7 @@ void Model::Draw(ShaderClass& shader, ShaderClass& shader2, Camera cam) {
 }
 
 glm::mat4 Model::getTransformation() {
-	return glm::translate(glm::mat4(1), cm) * translation;
+	return glm::translate(glm::mat4(1), cm) * translation * glm::translate(glm::mat4(1), -originalCm);
 }
 
 
@@ -62,8 +70,11 @@ void Model::Draw(Camera cam) {
 void Model::update(float deltaT) {
 	cm = cm + velocity * deltaT;
 
-	translation = glm::rotate(translation, 0.01f, glm::vec3(0, 1, 1));
+	translation = glm::rotate(translation, 0.01f, glm::vec3(1, 0, 0));
 
+	for (int i = 0; i < 8; i++) {
+		corners[i] = getTransformation() * glm::vec4(corners[i], 1);
+	}
 
 	for (int k = 0; k < shaders.size(); k++) {
 		shaders[k].Activate();
@@ -77,6 +88,14 @@ void Model::setVelocity(glm::vec3& v) {
 
 void Model::scaleVelocity(float g) {
 	velocity *= g;
+}
+
+std::vector<glm::vec3> Model::getHitboxVectors() {
+	std::vector<glm::vec3> returning;
+	for (int i = 0; i < hitboxVectors.size(); i++) {
+		returning.push_back(translation * glm::vec4(hitboxVectors[i], 1));
+	}
+	return returning;
 }
 
 
@@ -184,6 +203,7 @@ bool Model::load(std::string given, float scale) {
 			currentSum += corners[i];
 		}
 		cm = currentSum / 8.0f;
+		originalCm = cm;
 
 		file.close();
 	}

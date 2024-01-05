@@ -26,8 +26,11 @@ private:
 
 	glm::vec3 corners[8];
 	glm::vec3 cm;
+	glm::vec3 originalCm;
+	std::vector<glm::vec3> hitboxVectors;
 
 	void setupModel();
+	
 public:
 	Model(std::string filepath);
 	Model(std::string filepath, float scale);
@@ -39,5 +42,6 @@ public:
 	void setVelocity(glm::vec3 &givenV);
 	void scaleVelocity(float scale);
 	void setPosition(glm::vec3 givenPos);
+	std::vector<glm::vec3> getHitboxVectors();
 };
 

@@ -7,6 +7,7 @@
 
 
 Camera::Camera(int gWidth, int gHeight, float gxScale, glm::vec3 gPosition) {
+
 	position = gPosition;
 	width = gWidth;
 	height = gHeight;
@@ -16,7 +17,11 @@ Camera::Camera(int gWidth, int gHeight, float gxScale, glm::vec3 gPosition) {
 	currentTime = glfwGetTime();
 }
 
-void Camera::setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader) {
+Camera::Camera() {
+
+}
+
+void Camera::setMatrix(float FOVdeg, float nearPlane, float farPlane) {
 	translationMatrix = glm::lookAt(position, position + Orientation, Up);
 	camMatrix = glm::perspective(glm::radians(FOVdeg), (float)width / height / xScale, nearPlane, farPlane);
 }

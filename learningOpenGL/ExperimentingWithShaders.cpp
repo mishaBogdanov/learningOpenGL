@@ -19,6 +19,7 @@
 #include "Mesh.h"
 #include "Model.h"
 #include "floor.h"
+//#include "World.cpp"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -72,47 +73,14 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 	}
 
-
-
-	GLfloat vertices[] =
-
-	{ //     COORDINATES     /        COLORS      /   TexCoord  //
-
-		
-		-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f, //
-		-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	1.0f, 0.0f,
-		 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-		 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	1.0f, 0.0f, //
-		 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	0.0f, 1.0f
-	};
-
-	std::vector<glm::vec3> vertices2 = {
-		glm::vec3(-0.5f, 0.0f,  0.5f),
-		glm::vec3(-0.5f, 0.0f, -0.5f),
-		glm::vec3(0.5f, 0.0f, -0.5f),
-		glm::vec3(0.5f, 0.0f,  0.5f),
-		glm::vec3(0.0f, 0.8f,  0.0f),
-	};
-
-	// Indices for vertices order
-	std::vector<GLuint> ind =
-	{
-		2, 1, 0,
-		3, 2, 0,
-		0, 1, 4,
-		1, 2, 4,
-		2, 3, 4,
-		3, 0, 4
-	};
-
 	//std::vector<GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
-	TextureClass tex1("triangleGreggor.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	//TextureClass tex1("triangleGreggor.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 
-	ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
-	ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
+	//ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
+	//ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
 
-	VAO VAO1;
-	VAO1.Bind();
+	//VAO VAO1;
+	//VAO1.Bind();
 
 
 	//VBO VBO1(vertices, sizeof(vertices));
@@ -126,10 +94,10 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	//EBO1.Unbind();
 	// render loop
 	// -----------
-	GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
+	//GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
 
 
-	tex1.texUnit(shaderProgram, "tex0", 0);
+	//tex1.texUnit(shaderProgram, "tex0", 0);
 
 
 	glEnable(GL_DEPTH_TEST);
@@ -178,14 +146,14 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		//glBindTexture(GL_TEXTURE_2D, texture);
 
 
-		camera.setMatrix(90.0f, 0.1f, 300.0f, shaderProgram);
+		camera.setMatrix(90.0f, 0.1f, 300.0f);
 		
 
 
 
 
 		// update shader uniform
-		VAO1.Bind();
+		//VAO1.Bind();
 
 		// render the triangle
 		//glDrawElements(GL_TRIANGLES, ind.size(), GL_UNSIGNED_INT, 0);
@@ -205,6 +173,9 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 		cyber2.update(deltaT);
 		cyber2.Draw(camera);
 		floor.Draw(camera);
+
+
+
 		if (isConsole) {
 			glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGB, GL_FLOAT, pixels);
 			for (int i = 0; i < SCR_WIDTH * SCR_HEIGHT*3; i+=3) {
@@ -259,7 +230,7 @@ ExperimentingWithShaders::ExperimentingWithShaders() {
 	// ------------------------------------------------------------------------
 
 	//glDeleteTextures(1, &texture);
-	tex1.Delete();
+	//tex1.Delete();
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
 	glfwTerminate();
@@ -275,9 +246,9 @@ void processInput(GLFWwindow* window)
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	// make sure the viewport matches the new window dimensions; note that width and 
-	// height will be significantly larger than specified on retina displays.
-	glViewport(0, 0, width, height);
-}
+//void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+//{
+//	// make sure the viewport matches the new window dimensions; note that width and 
+//	// height will be significantly larger than specified on retina displays.
+//	glViewport(0, 0, width, height);
+//}

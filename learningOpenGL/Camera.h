@@ -23,9 +23,10 @@ private:
 	glm::mat4 camMatrix;
 	glm::mat4 translationMatrix;
 public:
+	Camera();
 	Camera(int widht, int height, float gxScale, glm::vec3 gPosition);
 
-	void setMatrix(float FOVdeg, float nearPlane, float farPlane, ShaderClass& shader);
+	void setMatrix(float FOVdeg, float nearPlane, float farPlane);
 	void Inputs(GLFWwindow* window);
 	void Matrix(ShaderClass& shader);
 };
