@@ -22,6 +22,15 @@
 #include "floor.h"
 #include <algorithm>
 
+
+struct IntersectionModel {
+	Model* model1;
+	Model *model2;
+	float amountIntersect;
+	glm::vec3 normal;
+} ;
+
+
 class World
 {
 private:
@@ -37,8 +46,9 @@ private:
 	float time;
 	std::vector<Model> models;
 	std::vector<Floor> floors;
-	std::vector<Model* > modelsToCheck;
 	GLFWwindow* window;
+
+	std::vector<IntersectionModel> currentCollisions;
 
 	const unsigned int SCR_WIDTH = 200;
 	const unsigned int SCR_HEIGHT = 100;
@@ -55,8 +65,11 @@ private:
 	void updatePhysDeltaT();
 
 	void comb(int N, int K, std::vector<int> & returning);
-	bool colliding(Model & mod1, Model & model2);
+	bool colliding(Model& mod1, Model& mod2, float& curintersect, glm::vec3& normalToIntersect);
 	void generateAxis(Model& mod1, Model& model2, std::vector<glm::vec3>& returning);
+	void projectModel(Model& given, glm::vec3& givenVector, float& max, float& min);
+	void detectCollisions();
+	void dealWithCollisions();
 
 
 public:
@@ -67,7 +80,13 @@ public:
 
 	void addModel(Model& given);
 	void addModel(std::string given);
+	void addModel(std::string given, glm::vec3 location);
+	void addModel(std::string given, float scale, glm::vec3 location);
 	void addModel(std::string given, float scale);
+	void addModel(std::string given, float scale, bool v, glm::vec3 velocity);
+
+	void rotateModel(int location, float angle, glm::vec3& norm);
+	void setVelocity(int index, glm::vec3 newVelocity);
 
 	void startRenderLoop();
 	void screenToPixel();
@@ -75,7 +94,6 @@ public:
 	void processInput();
 	void renderModels();
 	void renderFLoors(); //!!! ^
-	void startUpdateCycle();
 
 	
 };

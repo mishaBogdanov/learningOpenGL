@@ -5,6 +5,9 @@
 #include "MyMath.h"
 
 
+
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 World::World(float distX, float distY, float distZ, int divs) {
@@ -72,6 +75,19 @@ void World::addModel(std::string given, float scale) {
 	models.push_back(Model(given, scale));
 }
 
+
+void World::addModel(std::string given, float scale, glm::vec3 pos) {
+	models.push_back(Model(given, scale, pos));
+}
+
+void World::setVelocity(int location, glm::vec3 v) {
+	models[location].setVelocity(v);
+}
+
+
+void World::rotateModel(int location, float angle, glm::vec3& norm) {
+	models[location].rotate(angle, norm);
+}
 
 void World::screenToPixel() {
 
@@ -151,7 +167,7 @@ void World::renderModels() {
 
 void World::update() {
 	for (int i = 0; i < models.size(); i++) {
-		models[i].update(physDeltaT);
+		models[i].update(deltaT);
 	}
 }
 
@@ -192,25 +208,44 @@ void World::comb(int N, int K, std::vector<int> & returning) {
 
 
 
-bool World::colliding(Model& mod1, Model& mod2) {
+bool World::colliding(Model& mod1, Model& mod2, float & curintersect, glm::vec3 & normalToIntersect) {
 	std::vector<glm::vec3> axis;
 	generateAxis(mod1, mod2, axis);
-	return false;
+
+
+	for (int i = 0; i < axis.size(); i++) {
+		float mod1Max, mod1Min, mod2Max, mod2Min;
+		mod1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
+		mod2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
+		if (mod1Max < mod2Min || mod1Min > mod2Max) {
+			return false;
+		}
+		else if (mod1Max > mod2Min && curintersect < mod1Max - mod2Min) {
+			curintersect = mod1Max - mod2Min;
+			normalToIntersect = axis[i];
+		}
+		else if (mod1Min < mod2Max && curintersect < mod2Max - mod1Min) {
+			curintersect = mod2Max - mod1Min;
+			normalToIntersect = axis[i];
+		}
+	}
+
+	return true;
 }
 
-void World::generateAxis(Model& mod1, Model& model2, std::vector<glm::vec3>& returning) {
+void World::generateAxis(Model& mod1, Model& mod2, std::vector<glm::vec3>& returning) {
 	std::vector<glm::vec3> l1 = mod1.getHitboxVectors();
-	std::vector<glm::vec3> l2 = mod1.getHitboxVectors();
+	std::vector<glm::vec3> l2 = mod2.getHitboxVectors();
 	for (int i = 0; i < l1.size(); i++) {
 		returning.push_back(l1[i]);
 	}
 
-	for (int i = 0; i < l1.size(); i++) {
+	for (int i = 0; i < l2.size(); i++) {
 		returning.push_back(l2[i]);
 	}
 
 	for (int i = 0; i < l1.size(); i++) {
-		for (int k = i; k < l2.size(); k++) {
+		for (int k = 0; k < l2.size(); k++) {
 			glm::vec3 appending;
 			MyMath::vectorCross(l1[i], l2[k], appending);
 			returning.push_back(appending);
@@ -219,14 +254,44 @@ void World::generateAxis(Model& mod1, Model& model2, std::vector<glm::vec3>& ret
 }
 
 
-
-
-
-
-void World::startUpdateCycle() {
-	std::thread worker1(&World::runUpdateCycle, this, & models);
-	worker1.detach(); // Detach the thread
+void World::projectModel(Model& given, glm::vec3& givenVector, float& max, float& min) {
+	
 }
+
+void World::detectCollisions() {
+	std::vector<int> modelsToCheck;
+	comb(models.size(), 2, modelsToCheck);
+	for (int i = 0; i < modelsToCheck.size(); i += 2) {
+		glm::vec3 normal;
+		float intersectBy;
+		if (colliding(models[modelsToCheck[i]], models[modelsToCheck[i + 1]], intersectBy, normal)) {
+			IntersectionModel model;
+			model.model1 = &models[modelsToCheck[i]];
+			model.model2 = &models[modelsToCheck[i + 1]];
+			model.amountIntersect = intersectBy;
+			model.normal = normal;
+			currentCollisions.push_back(model);
+		}
+	}
+}
+
+void World::dealWithCollisions() {
+
+	for (int i = 0; i < currentCollisions.size(); i++) {
+		glm::vec3 t = currentCollisions[i].normal * currentCollisions[i].amountIntersect/100.0f;
+		(*currentCollisions[i].model2).moveBy(t);
+	}
+	currentCollisions.clear();
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -239,7 +304,6 @@ void World::startRenderLoop() {
 
 	while (!glfwWindowShouldClose(window))
 	{
-
 		deltaT = glfwGetTime() - time;
 		time = glfwGetTime();
 		// input
@@ -258,7 +322,9 @@ void World::startRenderLoop() {
 
 
 		cam.setMatrix(90.0f, 0.1f, 300.0f);
-
+		update();
+		detectCollisions();
+		dealWithCollisions();
 
 		renderModels();
 

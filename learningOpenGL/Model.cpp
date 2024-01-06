@@ -4,13 +4,14 @@
 #include <iostream>
 #include <cstdio>
 #include <glm/ext/matrix_transform.hpp>
+#include "MyMath.h"
 
 
 
 
 
 Model::Model(std::string location) {
-	load(location, 1);
+	load(location, 1, false, glm::vec3(0,0,0));
 	setupModel();
 
 
@@ -35,11 +36,19 @@ void Model::setupModel() {
 }
 
 Model::Model(std::string location, float scale) {
-	load(location, scale);
+	load(location, scale, false, glm::vec3(0,0,0));
 	setupModel();
+}
+
+Model::Model(std::string location, glm::vec3 physLocation) {
+	load(location, 1, true,  physLocation);
+	setupModel();
+}
 
 
-
+Model::Model(std::string location, float scale, glm::vec3 physLocation) {
+	load(location, scale, true, physLocation);
+	setupModel();
 }
 
 
@@ -70,10 +79,10 @@ void Model::Draw(Camera cam) {
 void Model::update(float deltaT) {
 	cm = cm + velocity * deltaT;
 
-	translation = glm::rotate(translation, 0.01f, glm::vec3(1, 0, 0));
+	translation = glm::rotate(translation, (float)angularVelocity * deltaT, angularVelocityDirection);
 
-	for (int i = 0; i < 8; i++) {
-		corners[i] = getTransformation() * glm::vec4(corners[i], 1);
+	for (int i = 0; i < corners.size(); i++) {
+		corners[i] = getTransformation() * glm::vec4(originalCorners[i], 1);
 	}
 
 	for (int k = 0; k < shaders.size(); k++) {
@@ -98,10 +107,35 @@ std::vector<glm::vec3> Model::getHitboxVectors() {
 	return returning;
 }
 
+void Model::getHitboxCorners(std::vector<glm::vec3>& returning) {
+	for (int i = 0; i < corners.size(); i++) {
+		returning.push_back(corners[i]);
+	}
+}
+
+void Model::getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& min) {
+	bool isFirst = true;
+	for (int i = 0; i < corners.size(); i++) {
+		glm::vec3 val;
+		MyMath::projection(projectVec, corners[i], val);
+		float square = MyMath::getVecMultiple(projectVec, val);
+		if (isFirst) {
+			max = square;
+			min = square;
+			isFirst = false;
+		}
+		else if (square > max) {
+			max = square;
+		}
+		else if (square < min) {
+			min = square;
+		}
+	}
+}
 
 
 
-bool Model::load(std::string given, float scale) {
+bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 newLocation) {
 
 	std::ifstream file(given);
 	std::vector<glm::vec3> Vertices = {};
@@ -189,25 +223,43 @@ bool Model::load(std::string given, float scale) {
 		mesh.push_back(Mesh(Vertices, Indices));
 		Vertices.clear();
 		Indices.clear();
-		corners[0] = glm::vec3(PosX, PosY, PosZ);
-		corners[1] = glm::vec3(PosX, PosY, NegZ);
-		corners[2] = glm::vec3(PosX, NegY, PosZ);
-		corners[3] = glm::vec3(PosX, NegY, NegZ);
-		corners[4] = glm::vec3(NegX, PosY, PosZ);
-		corners[5] = glm::vec3(NegX, PosY, NegZ);
-		corners[6] = glm::vec3(NegX, NegY, PosZ);
-		corners[7] = glm::vec3(NegX, NegY, NegZ);
+		originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
+		originalCorners.push_back(glm::vec3(PosX, PosY, NegZ));
+		originalCorners.push_back(glm::vec3(PosX, NegY, PosZ));
+		originalCorners.push_back(glm::vec3(PosX, NegY, NegZ));
+		originalCorners.push_back(glm::vec3(NegX, PosY, PosZ));
+		originalCorners.push_back(glm::vec3(NegX, PosY, NegZ));
+		originalCorners.push_back(glm::vec3(NegX, NegY, PosZ));
+		originalCorners.push_back(glm::vec3(NegX, NegY, NegZ));
+		for (int i = 0; i < originalCorners.size(); i++) {
+			corners.push_back(originalCorners[i]);
+		}
 
 		glm::vec3 currentSum = corners[0];
-		for (int i = 1; i < 8; i++) {
+		for (int i = 1; i < corners.size(); i++) {
 			currentSum += corners[i];
 		}
-		cm = currentSum / 8.0f;
+		cm = currentSum / (float)corners.size();
 		originalCm = cm;
+		if (customLocation) {
+			cm = newLocation;
+
+		}
 
 		file.close();
+
+
 	}
 
 	return 0;
+}
+
+
+void Model::rotate(float angle, glm::vec3& norm) {
+	translation = glm::rotate(translation, glm::radians(angle), norm);
+}
+
+void Model::moveBy(glm::vec3& given) {
+	cm += given;
 }
 

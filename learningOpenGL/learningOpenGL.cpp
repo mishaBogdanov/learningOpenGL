@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "MyMath.h"
 
 #include "World.h"
 
@@ -22,8 +23,15 @@ int main()
     test.setupGLFW();
     test.addFloor(10, 100, 0, 0, 0);
     test.addModel("TeslaTruck.object", 10);
-    test.startUpdateCycle();
+    test.addModel("TeslaTruck.object", 10, glm::vec3(0,9.9,200));
+    test.setVelocity(0, glm::vec3(0, 0, 20));
+    test.setVelocity(1, glm::vec3(0, 0, -20));
+    glm::vec3 t = glm::vec3(0, 1, 0);
+    glm::vec3 t2 = glm::vec3(1, 1, 1);
+    test.rotateModel(1, 180, t);
+    //test.rotateModel(0, 60.0f, t2);
     test.startRenderLoop();
+
 
 
 

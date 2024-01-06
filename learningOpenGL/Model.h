@@ -11,7 +11,7 @@ class Model
 {
 private:
 	std::vector<Mesh> mesh;
-	bool load( std::string opening, float scale);
+	bool load( std::string opening, float scale, bool customLocation, glm::vec3 newLocation);
 	glm::vec3 pos;
 	glm::mat4 translation;
 
@@ -24,7 +24,8 @@ private:
 	double angularVelocity;
 	std::vector<ShaderClass> shaders;
 
-	glm::vec3 corners[8];
+	std::vector<glm::vec3> corners;
+	std::vector<glm::vec3> originalCorners;
 	glm::vec3 cm;
 	glm::vec3 originalCm;
 	std::vector<glm::vec3> hitboxVectors;
@@ -34,6 +35,9 @@ private:
 public:
 	Model(std::string filepath);
 	Model(std::string filepath, float scale);
+	Model(std::string filepath, glm::vec3 location);
+	Model(std::string filepath, float scale, glm::vec3 location);
+
 	void Draw(ShaderClass& shader, ShaderClass& shader2, Camera cam);
 	void Draw(Camera cam);
 	glm::mat4 getTransformation();
@@ -42,6 +46,11 @@ public:
 	void setVelocity(glm::vec3 &givenV);
 	void scaleVelocity(float scale);
 	void setPosition(glm::vec3 givenPos);
+	void getHitboxCorners(std::vector<glm::vec3>& returning);
+	void getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& min);
+	void rotate(float angle, glm::vec3& norm);
+	void moveBy(glm::vec3& given);
+
 	std::vector<glm::vec3> getHitboxVectors();
 };
 
