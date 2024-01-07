@@ -65,7 +65,7 @@ void Camera::Inputs(GLFWwindow* window) {
 
 		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
 		// and then "transforms" them into degrees 
-		float rotX = (deltaT * sensitivity) * (float)(mouseY - (height / 2));
+		float rotX = (deltaT * sensitivity) * (float)(mouseY - (height / 4));
 		float rotY = (deltaT * sensitivity) * (float)(mouseX - (width / 2));
 
 		// Calculates upcoming vertical change in the Orientation
@@ -81,14 +81,26 @@ void Camera::Inputs(GLFWwindow* window) {
 		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, (width / 2), (height / 2));
-	}
+	}resetMousePosition(window);
 }
 
 void Camera::Matrix(ShaderClass& shader) {
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "translationMatrix"), 1, GL_FALSE, glm::value_ptr(translationMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "camMatrix"), 1, GL_FALSE, glm::value_ptr(camMatrix));
+
+}
+
+
+
+void Camera::setView(GLFWwindow * window, glm::vec3 pos, glm::vec3 lookTo) {
+	position = pos;
+	Orientation = glm::normalize(lookTo - pos);
+	resetMousePosition(window);
+}
+
+void Camera::resetMousePosition(GLFWwindow * window) {
+	glfwSetCursorPos(window, (width / 2), (height / 4));
 
 }
 

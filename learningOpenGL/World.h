@@ -61,6 +61,11 @@ private:
 
 	Camera cam = Camera(200, 100 * xScale, 1, glm::vec3(0.0f, 0.0f, 2.0f));
 
+	bool pushed = false;
+	bool isDriving = false;
+	Model* drivable;
+
+
 	void runUpdateCycle(std::vector<Model>* given);
 	void updatePhysDeltaT();
 
@@ -70,6 +75,7 @@ private:
 	void projectModel(Model& given, glm::vec3& givenVector, float& max, float& min);
 	void detectCollisions();
 	void dealWithCollisions();
+	void dealWithBothMovable(int i);
 
 
 public:

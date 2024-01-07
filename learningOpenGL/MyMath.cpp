@@ -17,6 +17,11 @@ float MyMath::getVectorMagnitudeSquared(glm::vec3 & given) {
 	return given.x * given.x + given.y * given.y + given.z * given.z;
 }
 
+float MyMath::getVectorMagnitude(glm::vec3& given) {
+	return sqrt(given.x * given.x + given.y * given.y + given.z * given.z);
+}
+
+
 float MyMath::getSumParts(glm::vec3& given) {
 	return given.x + given.y + given.z;
 }

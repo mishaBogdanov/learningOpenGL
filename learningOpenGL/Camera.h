@@ -29,5 +29,7 @@ public:
 	void setMatrix(float FOVdeg, float nearPlane, float farPlane);
 	void Inputs(GLFWwindow* window);
 	void Matrix(ShaderClass& shader);
+	void setView(GLFWwindow* window, glm::vec3 camPos, glm::vec3 lookTo);
+	void resetMousePosition(GLFWwindow* window);
 };
 

@@ -20,7 +20,7 @@ World::World(float distX, float distY, float distZ, int divs) {
 void World::setupGLFW() {
 	// glfw: initialize and configure
 		// ------------------------------
-		glfwInit();
+	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -106,7 +106,7 @@ void World::screenToPixel() {
 				pos = (SCR_HEIGHT - (i / 3 / SCR_WIDTH) - 1) * SCR_WIDTH + ((i / 3) % SCR_WIDTH);
 				//std::cout << pos;
 			}
-			
+
 
 			float colorValue = pixels[i] + pixels[i + 1] + pixels[i + 2];
 
@@ -151,7 +151,22 @@ void World::clearScreen() {
 
 
 void World::processInput() {
-	cam.Inputs(window);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !isDriving && !pushed) {
+		isDriving = true;
+		pushed = true;
+		drivable = &models[0];
+	}
+	else if ((glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS && pushed)) {
+		pushed = false;
+	}else if (!isDriving) {
+		cam.Inputs(window);
+	}else{
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !pushed) {
+			isDriving = false;
+			pushed = true;
+		}
+	cam.setView(window, (*(*drivable).getCm()) - (*drivable).getFacing() * 50.0f + glm::vec3(0,20,0), (*(*drivable).getCm()));
+	}
 }
 
 void World::renderModels() {
@@ -187,13 +202,13 @@ void World::runUpdateCycle(std::vector<Model>* given) {
 	while (true) {
 		//test(given, physDeltaT);
 		double time = glfwGetTime();
-		Sleep((physT + 1/2 - time) * 1000);
+		Sleep((physT + 1 / 2 - time) * 1000);
 		updatePhysDeltaT();
 	}
 }
 
 
-void World::comb(int N, int K, std::vector<int> & returning) {
+void World::comb(int N, int K, std::vector<int>& returning) {
 	std::string bitmask(K, 1); // K leading 1's
 	bitmask.resize(N, 0); // N-K trailing 0's
 
@@ -208,10 +223,10 @@ void World::comb(int N, int K, std::vector<int> & returning) {
 
 
 
-bool World::colliding(Model& mod1, Model& mod2, float & curintersect, glm::vec3 & normalToIntersect) {
+bool World::colliding(Model& mod1, Model& mod2, float& curintersect, glm::vec3& normalToIntersect) {
 	std::vector<glm::vec3> axis;
 	generateAxis(mod1, mod2, axis);
-
+	bool firstCheck = true;
 
 	for (int i = 0; i < axis.size(); i++) {
 		float mod1Max, mod1Min, mod2Max, mod2Min;
@@ -219,13 +234,22 @@ bool World::colliding(Model& mod1, Model& mod2, float & curintersect, glm::vec3 
 		mod2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
 		if (mod1Max < mod2Min || mod1Min > mod2Max) {
 			return false;
+		}if (firstCheck) {
+			if (mod1Max > mod2Min) {
+				curintersect = mod1Max - mod2Min;
+			}
+			else {
+				curintersect = mod2Max - mod1Min;
+			}
+			normalToIntersect = axis[i];
+			firstCheck = false;
 		}
-		else if (mod1Max > mod2Min && curintersect < mod1Max - mod2Min) {
+		else if (mod1Max > mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
 			curintersect = mod1Max - mod2Min;
 			normalToIntersect = axis[i];
 		}
-		else if (mod1Min < mod2Max && curintersect < mod2Max - mod1Min) {
-			curintersect = mod2Max - mod1Min;
+		else if (mod1Min < mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
+			curintersect = mod1Min - mod2Max;
 			normalToIntersect = axis[i];
 		}
 	}
@@ -255,7 +279,7 @@ void World::generateAxis(Model& mod1, Model& mod2, std::vector<glm::vec3>& retur
 
 
 void World::projectModel(Model& given, glm::vec3& givenVector, float& max, float& min) {
-	
+
 }
 
 void World::detectCollisions() {
@@ -268,18 +292,45 @@ void World::detectCollisions() {
 			IntersectionModel model;
 			model.model1 = &models[modelsToCheck[i]];
 			model.model2 = &models[modelsToCheck[i + 1]];
-			model.amountIntersect = intersectBy;
 			model.normal = normal;
+			model.amountIntersect = intersectBy;
 			currentCollisions.push_back(model);
 		}
 	}
 }
 
+void::World::dealWithBothMovable(int i) {
+	glm::vec3 t = currentCollisions[i].normal * currentCollisions[i].amountIntersect;
+	(*currentCollisions[i].model2).moveBy(t);
+	glm::vec3 posDifference = glm::normalize((*(*currentCollisions[i].model1).getCm()) - (*(*currentCollisions[i].model2).getCm()));
+	glm::vec3 angular = glm::cross(posDifference, glm::normalize(currentCollisions[i].normal)) / 500.0f * (currentCollisions[i].model1->getMagnitudeVelocity() + currentCollisions[i].model2->getMagnitudeVelocity());
+	(*currentCollisions[i].model1).addAngularVelocity(angular);
+	//glm::vec3 angular2 = angular * (1.0f);
+	(*currentCollisions[i].model2).addAngularVelocity(angular);
+
+	glm::vec3 n = ((*(*currentCollisions[i].model2).getCm()) - (*(*currentCollisions[i].model1).getCm()));
+	n = n / MyMath::getVectorMagnitude(n);
+	float m_eff = 1 / (1 / (*currentCollisions[i].model1).getMass() + 1 / (*currentCollisions[i].model2).getMass());
+	float v_imp = glm::dot(n, ((*currentCollisions[i].model1).getVelocity() - (*currentCollisions[i].model2).getVelocity()));
+	float toBeChangedBounceConstant = 0.1;
+	float J = (1 + toBeChangedBounceConstant) * m_eff * v_imp;
+	glm::vec3 velocityToChange1 = n * (-J) / (*currentCollisions[i].model1).getMass();
+	glm::vec3 velocityToChange2 = n * J / (*currentCollisions[i].model2).getMass();
+	(*currentCollisions[i].model1).addVelocity(velocityToChange1);
+	(*currentCollisions[i].model2).addVelocity(velocityToChange2);
+}
+
 void World::dealWithCollisions() {
+	//if (currentCollisions.size() != 0) {
+	//	std::cout << currentCollisions[0].normal.x << " " << currentCollisions[0].normal.y << " " << currentCollisions[0].normal.z << "\n";
+	//	glfwSetWindowShouldClose(window, true);
+	//}
+
 
 	for (int i = 0; i < currentCollisions.size(); i++) {
-		glm::vec3 t = currentCollisions[i].normal * currentCollisions[i].amountIntersect/100.0f;
-		(*currentCollisions[i].model2).moveBy(t);
+		if (currentCollisions[i].model1->isMovable() && currentCollisions[i].model2->isMovable()) {
+			dealWithBothMovable(i);
+		}
 	}
 	currentCollisions.clear();
 }

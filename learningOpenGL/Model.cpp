@@ -11,17 +11,20 @@
 
 
 Model::Model(std::string location) {
-	load(location, 1, false, glm::vec3(0,0,0));
+	load(location, 1, false, glm::vec3(0, 0, 0));
 	setupModel();
+
 
 
 }
 
 void Model::setupModel() {
+	mass = 100;
 	translation = glm::mat4(1);
 	velocity = glm::vec3(0, 0, 0);
-	angularVelocityDirection = glm::vec3(1, 0, 0);
+	angularVelocityDirection = glm::vec3(0, 0, 0);
 	angularVelocity = 0;
+	facing = glm::vec3(0, 0, 1);
 	ShaderClass shaderProgram("default.vert", "default.geom", "default.frag");
 	ShaderClass shaderProgram2("default.vert", "outline.geom", "outline.frag");
 	shaders.push_back(shaderProgram);
@@ -33,16 +36,40 @@ void Model::setupModel() {
 	hitboxVectors.push_back(glm::vec3(1, 0, 0));
 	hitboxVectors.push_back(glm::vec3(0, 1, 0));
 	hitboxVectors.push_back(glm::vec3(0, 0, 1));
+	movable = true;
 }
 
+
+
+
 Model::Model(std::string location, float scale) {
-	load(location, scale, false, glm::vec3(0,0,0));
+	load(location, scale, false, glm::vec3(0, 0, 0));
 	setupModel();
 }
 
 Model::Model(std::string location, glm::vec3 physLocation) {
-	load(location, 1, true,  physLocation);
+	load(location, 1, true, physLocation);
 	setupModel();
+}
+
+Model::Model(float length, float gheight, float gz, float gx) {
+	angularVelocity = 0;
+	angularVelocityDirection = glm::vec3(0);
+	cm = glm::vec3(gx, gheight, gz);
+	facing = glm::vec3(0, 1, 0);
+	mass = 100;
+	originalCm = cm;
+	translation = glm::mat4(1);
+	up = glm::vec3(0, 1, 0);
+	velocity = glm::vec3(0, 0, 0);
+	hitboxVectors.push_back(glm::vec3(0, 1, 0));
+	corners.push_back(glm::vec3(gx - length / 2, gheight, gz - length / 2));
+	corners.push_back(glm::vec3(gx - length / 2, gheight, gz + length / 2));
+	corners.push_back(glm::vec3(gx + length / 2, gheight, gz - length / 2));
+	corners.push_back(glm::vec3(gx + length / 2, gheight, gz + length / 2));
+
+
+	movable = false;
 }
 
 
@@ -79,11 +106,22 @@ void Model::Draw(Camera cam) {
 void Model::update(float deltaT) {
 	cm = cm + velocity * deltaT;
 
-	translation = glm::rotate(translation, (float)angularVelocity * deltaT, angularVelocityDirection);
+	if (angularVelocityDirection.x != 0 || angularVelocityDirection.y != 0 || angularVelocityDirection.z != 0) {
+		translation = glm::rotate(translation, sqrt(MyMath::getVectorMagnitudeSquared(angularVelocityDirection) * deltaT), angularVelocityDirection);
+	}
+
+	if (MyMath::getVectorMagnitudeSquared(angularVelocityDirection) < 0.0000000001) {
+		angularVelocityDirection = glm::vec3(0);
+	}
+	else {
+		angularVelocityDirection = angularVelocityDirection * 0.99f * (1 - deltaT);
+	}
+
 
 	for (int i = 0; i < corners.size(); i++) {
 		corners[i] = getTransformation() * glm::vec4(originalCorners[i], 1);
 	}
+
 
 	for (int k = 0; k < shaders.size(); k++) {
 		shaders[k].Activate();
@@ -263,3 +301,34 @@ void Model::moveBy(glm::vec3& given) {
 	cm += given;
 }
 
+float Model::getMass() {
+	return mass;
+}
+
+glm::vec3* Model::getCm() {
+	return &cm;
+}
+
+void Model::addAngularVelocity(glm::vec3& given) {
+	angularVelocityDirection += given;
+}
+
+float Model::getMagnitudeVelocity() {
+	return sqrt(MyMath::getVectorMagnitudeSquared(velocity));
+}
+
+glm::vec3 Model::getVelocity() {
+	return velocity;
+}
+
+void Model::addVelocity(glm::vec3& given) {
+	velocity += given;
+}
+
+glm::vec3 Model::getFacing() {
+	return glm::vec4(facing, 1) * getTransformation();
+}
+
+bool Model::isMovable() {
+	return movable;
+}
