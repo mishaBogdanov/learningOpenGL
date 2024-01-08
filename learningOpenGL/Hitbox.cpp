@@ -31,16 +31,15 @@ std::vector<glm::vec3> Hitbox::getNormalVectors() {
 
 
 int Hitbox::getNormalsSize() {
-	std::cout << normals.size() << "\n";
 	return normals.size();
 }
 
 
 void Hitbox::getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& min) {
 	bool isFirst = true;
-	for (int i = 0; i < vertices.size(); i++) {
+	for (int i = 0; i < positionedVertices.size(); i++) {
 		glm::vec3 val;
-		MyMath::projection(projectVec, vertices[i], val);
+		MyMath::projection(projectVec, positionedVertices[i], val);
 		float square = MyMath::getVecMultiple(projectVec, val);
 		if (isFirst) {
 			max = square;

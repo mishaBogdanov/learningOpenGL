@@ -237,72 +237,71 @@ bool World::colliding_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, float& curinter
 		hitbox2Remaining.push_back(i);
 	}
 
-	std::cout << axis.size() << " size \n";
-	for (int i = 0; i < axis.size(); i++) {
-		std::cout << axis[i].x << " " << axis[i].y << " " << axis[i].z << "\n";
-	}
 
 
 	for (int i = 0; i < axis.size(); i++) {
 		float mod1Max, mod1Min, mod2Max, mod2Min;
-		hitbox1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
-		hitbox2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
-		bool hitBox1onRight;
-		if (mod1Max < mod2Min || mod1Min > mod2Max) {
-			return false;
-		}
-		if (firstCheck) {
-			if (mod1Max > mod2Min) {
+		if (axis[i].x != 0 || axis[i].y != 0 || axis[i].z != 0) {
+			hitbox1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
+			hitbox2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
+			bool hitBox1onRight;
+			if (mod1Max < mod2Min || mod1Min > mod2Max) {
+				return false;
+			}
+			if (firstCheck) {
+				if (mod1Max > mod2Min) {
+					hitBox1onRight = false;
+					curintersect = mod1Max - mod2Min;
+				}
+				else {
+					hitBox1onRight = true;
+					curintersect = mod2Max - mod1Min;
+				}
+				normalToIntersect = axis[i];
+				firstCheck = false;
+			}
+			else if (mod1Max > mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
 				hitBox1onRight = false;
 				curintersect = mod1Max - mod2Min;
+				normalToIntersect = axis[i];
 			}
-			else {
+			else if (mod1Min < mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
 				hitBox1onRight = true;
-				curintersect = mod2Max - mod1Min;
+				curintersect = mod1Min - mod2Max;
+				normalToIntersect = axis[i];
 			}
-			normalToIntersect = axis[i];
-			firstCheck = false;
-		}
-		else if (mod1Max > mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
-			hitBox1onRight = false;
-			curintersect = mod1Max - mod2Min;
-			normalToIntersect = axis[i];
-		}
-		else if (mod1Min < mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
-			hitBox1onRight = true;
-			curintersect = mod1Min - mod2Max;
-			normalToIntersect = axis[i];
-		}
-		else if (mod1Max > mod2Min) {
-			hitBox1onRight = false;
-		}
-		else if (mod1Min < mod2Max) {
-			hitBox1onRight = true;
-		}
-		int erased = 0;
-		for (int i = 0; i < hitbox1Remaining.size() - erased; i++) {
-			glm::vec3 returning;
-			MyMath::projection(axis[i], (*hitbox1.getVec(hitbox1Remaining[i])), returning);
-			float vectorScale = MyMath::getVecMultiple(axis[i], returning);
-			if ((vectorScale > mod2Max && hitBox1onRight) ||
-				(vectorScale < mod1Min && !hitBox1onRight)) {
-				hitbox1Remaining.erase(hitbox1Remaining.begin() + i);
-				erased++;
-				i--;
+			else if (mod1Max > mod2Min) {
+				hitBox1onRight = false;
 			}
-		}
-		erased = 0;
-		for (int i = 0; i < hitbox2Remaining.size() - erased; i++) {
-			glm::vec3 returning;
-			MyMath::projection(axis[i], (*hitbox1.getVec(hitbox2Remaining[i])), returning);
-			float vectorScale = MyMath::getVecMultiple(axis[i], returning);
-			if ((vectorScale < mod1Min && hitBox1onRight) ||
-				(vectorScale > mod1Max && !hitBox1onRight)) {
-				hitbox2Remaining.erase(hitbox2Remaining.begin() + i);
-				erased++;
-				i--;
+			else if (mod1Min < mod2Max) {
+				hitBox1onRight = true;
+			}
+			int erased = 0;
+			for (int i = 0; i < hitbox1Remaining.size() - erased; i++) {
+				glm::vec3 returning;
+				MyMath::projection(axis[i], (*hitbox1.getVec(hitbox1Remaining[i])), returning);
+				float vectorScale = MyMath::getVecMultiple(axis[i], returning);
+				if ((vectorScale > mod2Max && hitBox1onRight) ||
+					(vectorScale < mod1Min && !hitBox1onRight)) {
+					hitbox1Remaining.erase(hitbox1Remaining.begin() + i);
+					erased++;
+					i--;
+				}
+			}
+			erased = 0;
+			for (int i = 0; i < hitbox2Remaining.size() - erased; i++) {
+				glm::vec3 returning;
+				MyMath::projection(axis[i], (*hitbox1.getVec(hitbox2Remaining[i])), returning);
+				float vectorScale = MyMath::getVecMultiple(axis[i], returning);
+				if ((vectorScale < mod1Min && hitBox1onRight) ||
+					(vectorScale > mod1Max && !hitBox1onRight)) {
+					hitbox2Remaining.erase(hitbox2Remaining.begin() + i);
+					erased++;
+					i--;
+				}
 			}
 		}
+		
 	}
 	for (int i = 0; i < hitbox1Remaining.size(); i++) {
 		collisionPosition += (*hitbox1.getVec(i));
