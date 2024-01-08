@@ -5,13 +5,21 @@
 #include "glm/gtc/type_ptr.hpp"
 #include <iostream>
 #include "Mesh.h"
+#include "Hitbox.h"
+
+struct IntersectionModel {
+	Model* model1;
+	Model* model2;
+	float amountIntersect;
+	glm::vec3 normal;
+	glm::vec3 intersectionPosition;
+};
 
 
 class Model
 {
 private:
 	std::vector<Mesh> mesh;
-	bool load( std::string opening, float scale, bool customLocation, glm::vec3 newLocation);
 	//glm::vec3 pos;
 	glm::mat4 translation;
 
@@ -30,9 +38,18 @@ private:
 	glm::vec3 cm;
 	glm::vec3 originalCm;
 	std::vector<glm::vec3> hitboxVectors;
+
+	std::vector<Hitbox> hitboxes;
+	std::vector<IntersectionModel *> collisions;
+
+
+
 	float mass;
 
 	void setupModel();
+	void setupCybertruck(float scale);
+	bool load(std::string opening, float scale, bool customLocation, glm::vec3 newLocation);
+
 	
 public:
 	Model(std::string filepath);
@@ -64,6 +81,14 @@ public:
 	glm::vec3 getFacing();
 
 	std::vector<glm::vec3> getHitboxVectors();
+
+	void getHitboxes(Hitbox * & firstHitbox, int & size);
+	int getHitboxesSize();
+
+	void addIntersection(IntersectionModel * given);
+	Hitbox* getHitbox(int i);
+
 	bool isMovable();
+	void handleCollisions();
 };
 

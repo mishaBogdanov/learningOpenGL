@@ -13,9 +13,6 @@
 Model::Model(std::string location) {
 	load(location, 1, false, glm::vec3(0, 0, 0));
 	setupModel();
-
-
-
 }
 
 void Model::setupModel() {
@@ -37,6 +34,9 @@ void Model::setupModel() {
 	hitboxVectors.push_back(glm::vec3(0, 1, 0));
 	hitboxVectors.push_back(glm::vec3(0, 0, 1));
 	movable = true;
+
+	Hitbox h = Hitbox(originalCorners, hitboxVectors, this);
+	hitboxes.push_back(h);
 }
 
 
@@ -118,8 +118,12 @@ void Model::update(float deltaT) {
 	}
 
 
-	for (int i = 0; i < corners.size(); i++) {
-		corners[i] = getTransformation() * glm::vec4(originalCorners[i], 1);
+	//for (int i = 0; i < corners.size(); i++) {
+	//	corners[i] = getTransformation() * glm::vec4(originalCorners[i], 1);
+	//}
+	for (int i = 0; i < hitboxes.size(); i++) {
+		glm::mat4 full = getTransformation();
+		hitboxes[i].update(&full, &translation);
 	}
 
 
@@ -143,6 +147,15 @@ std::vector<glm::vec3> Model::getHitboxVectors() {
 		returning.push_back(translation * glm::vec4(hitboxVectors[i], 1));
 	}
 	return returning;
+}
+
+void Model::getHitboxes(Hitbox * & firstHitbox, int & size) {
+	firstHitbox = &hitboxes[0];
+	size = hitboxes.size();
+}
+
+int Model::getHitboxesSize() {
+	return hitboxes.size();
 }
 
 void Model::getHitboxCorners(std::vector<glm::vec3>& returning) {
@@ -174,6 +187,7 @@ void Model::getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& mi
 
 
 bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 newLocation) {
+	
 
 	std::ifstream file(given);
 	std::vector<glm::vec3> Vertices = {};
@@ -182,6 +196,7 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 	int lastMaxVertexNumber = 1;
 
 	float PosX, PosY, PosZ, NegX, NegY, NegZ;
+
 	bool isFirst = true;
 
 	if (file.is_open()) {
@@ -261,6 +276,7 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		mesh.push_back(Mesh(Vertices, Indices));
 		Vertices.clear();
 		Indices.clear();
+
 		originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
 		originalCorners.push_back(glm::vec3(PosX, PosY, NegZ));
 		originalCorners.push_back(glm::vec3(PosX, NegY, PosZ));
@@ -272,6 +288,9 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		for (int i = 0; i < originalCorners.size(); i++) {
 			corners.push_back(originalCorners[i]);
 		}
+
+		
+
 
 		glm::vec3 currentSum = corners[0];
 		for (int i = 1; i < corners.size(); i++) {
@@ -331,4 +350,98 @@ glm::vec3 Model::getFacing() {
 
 bool Model::isMovable() {
 	return movable;
+}
+
+
+void Model::setupCybertruck(float scale) {
+
+	std::vector<glm::vec3> frontLeftWheel;
+	std::vector<glm::vec3> frontRightWheel;
+	std::vector<glm::vec3> rearRightWheel;
+	std::vector<glm::vec3> rearLeftWheel;
+	std::vector<glm::vec3> body;
+	std::vector<glm::vec3> wheelNormal;
+	std::vector<glm::vec3> bodyNormal;
+
+
+
+
+	frontRightWheel.push_back(glm::vec3(-1.068526, -0.024803, 2.109123) * scale);
+	frontRightWheel.push_back(glm::vec3(-1.068526, 0.377191, 2.456192) * scale);
+	frontRightWheel.push_back(glm::vec3(-1.068526, -0.024803, 1.828386) * scale);
+	frontRightWheel.push_back(glm::vec3(-1.068526, 0.377191, 1.481317) * scale);
+	frontRightWheel.push_back(glm::vec3(-0.682371, -0.024803, 2.109123) * scale);
+	frontRightWheel.push_back(glm::vec3(-0.682371, 0.377191, 2.456192) * scale);
+	frontRightWheel.push_back(glm::vec3(-0.682371, -0.024803, 1.828386) * scale);
+	frontRightWheel.push_back(glm::vec3(-0.682371, 0.377191, 1.481317) * scale);
+
+	frontLeftWheel.push_back(glm::vec3(0.686718, -0.024803, 2.109123) * scale);
+	frontLeftWheel.push_back(glm::vec3(0.686718, 0.377191, 2.456192) * scale);
+	frontLeftWheel.push_back(glm::vec3(0.686718, -0.024803, 1.828386) * scale);
+	frontLeftWheel.push_back(glm::vec3(0.686718, 0.377191, 1.481317) * scale);
+	frontLeftWheel.push_back(glm::vec3(1.072873, -0.024803, 2.109123) * scale);
+	frontLeftWheel.push_back(glm::vec3(1.072873, 0.377191, 2.456192) * scale);
+	frontLeftWheel.push_back(glm::vec3(1.072873, -0.024803, 1.828386) * scale);
+	frontLeftWheel.push_back(glm::vec3(1.072873, 0.377191, 1.481317) * scale);
+
+	rearLeftWheel.push_back(glm::vec3(0.686718, -0.024803, -1.618060) * scale);
+	rearLeftWheel.push_back(glm::vec3(0.686718, 0.377191, -1.270991) * scale);
+	rearLeftWheel.push_back(glm::vec3(0.686718, -0.024803, -1.898797) * scale);
+	rearLeftWheel.push_back(glm::vec3(0.686718, 0.377191, -2.245865) * scale);
+	rearLeftWheel.push_back(glm::vec3(1.072873, -0.024803, -1.618060) * scale);
+	rearLeftWheel.push_back(glm::vec3(1.072873, 0.377191, -1.270991) * scale);
+	rearLeftWheel.push_back(glm::vec3(1.072873, -0.024803, -1.898797) * scale);
+	rearLeftWheel.push_back(glm::vec3(1.072873, 0.377191, -2.245865) * scale);
+
+	rearRightWheel.push_back(glm::vec3(-1.068526, -0.024803, -1.618060) * scale);
+	rearRightWheel.push_back(glm::vec3(-1.068526, 0.377191, -1.270991) * scale);
+	rearRightWheel.push_back(glm::vec3(-1.068526, -0.024803, -1.898797) * scale);
+	rearRightWheel.push_back(glm::vec3(-1.068526, 0.377191, -2.245865) * scale);
+	rearRightWheel.push_back(glm::vec3(-0.682371, -0.024803, -1.618060) * scale);
+	rearRightWheel.push_back(glm::vec3(-0.682371, 0.377191, -1.270991) * scale);
+	rearRightWheel.push_back(glm::vec3(-0.682371, -0.024803, -1.898797) * scale);
+	rearRightWheel.push_back(glm::vec3(-0.682371, 0.377191, -2.245865) * scale);
+
+	body.push_back(glm::vec3(-1.068788, 0.364160, 2.884884) * scale);
+	body.push_back(glm::vec3(-1.068788, 1.871332, 0.464945) * scale);
+	body.push_back(glm::vec3(-1.068788, 0.364160, -2.808581) * scale);
+	body.push_back(glm::vec3(-1.068788, 1.871332, -2.808581) * scale);
+	body.push_back(glm::vec3(1.059664, 0.364160, 2.884884) * scale);
+	body.push_back(glm::vec3(1.059664, 1.871332, 0.464945) * scale);
+	body.push_back(glm::vec3(1.059664, 0.364160, -2.808581) * scale);
+	body.push_back(glm::vec3(1.059664, 1.871332, -2.808581) * scale);
+	body.push_back(glm::vec3(-1.068788, 1.021972, 2.884884) * scale);
+	body.push_back(glm::vec3(-1.068788, 1.021972, -2.808581) * scale);
+	body.push_back(glm::vec3(1.059664, 1.021972, -2.808581) * scale);
+	body.push_back(glm::vec3(1.059664, 1.021972, 2.884884) * scale);
+
+	wheelNormal.push_back(glm::vec3(0, 1, 0));
+	wheelNormal.push_back(glm::vec3(1, 0, 0));
+	wheelNormal.push_back(glm::vec3(0, -1 / sqrt(2), 1 / sqrt(2)));
+	wheelNormal.push_back(glm::vec3(0, -1 / sqrt(2), -1 / sqrt(2)));
+
+
+	bodyNormal.push_back(glm::vec3(0, 1, 0));
+	bodyNormal.push_back(glm::vec3(1, 0, 0));
+	bodyNormal.push_back(glm::vec3(0, 0, 1));
+	bodyNormal.push_back(glm::vec3(0, 1 / sqrt(8.1175480847), 2.84913111048 / sqrt(8.1175480847)));
+}
+
+void Model::addIntersection(IntersectionModel* given) {
+	collisions.push_back(given);
+}
+
+Hitbox* Model::getHitbox(int i) {
+	return &hitboxes[i];
+}
+
+void Model::handleCollisions() {
+	for (int i = 0; i < collisions.size(); i++) {
+		if (collisions[i]->model1 == this) {
+
+		}
+		else {
+
+		}
+	}
 }

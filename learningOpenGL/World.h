@@ -21,14 +21,12 @@
 #include "Model.h"
 #include "floor.h"
 #include <algorithm>
+//#include "Hitbox.h"
+//class Hitbox;
+//class Model;
 
-
-struct IntersectionModel {
-	Model* model1;
-	Model *model2;
-	float amountIntersect;
-	glm::vec3 normal;
-} ;
+class Model;
+class Hitbox;
 
 
 class World
@@ -70,9 +68,14 @@ private:
 	void updatePhysDeltaT();
 
 	void comb(int N, int K, std::vector<int> & returning);
-	bool colliding(Model& mod1, Model& mod2, float& curintersect, glm::vec3& normalToIntersect);
-	void generateAxis(Model& mod1, Model& model2, std::vector<glm::vec3>& returning);
-	void projectModel(Model& given, glm::vec3& givenVector, float& max, float& min);
+
+
+	//bool colliding(Model& mod1, Model& mod2, float& curintersect, glm::vec3& normalToIntersect);
+	bool colliding_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect, glm::vec3& collisionPosition);
+	//void generateAxis(Model& mod1, Model& model2, std::vector<glm::vec3>& returning);
+	void generateAxis_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, std::vector<glm::vec3>& returning);
+	bool checkHitboxes(Model& model1, Model& model2);
+
 	void detectCollisions();
 	void dealWithCollisions();
 	void dealWithBothMovable(int i);
