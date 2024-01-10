@@ -197,6 +197,8 @@ void World::update() {
 
 
 
+
+
 void World::comb(int N, int K, std::vector<int>& returning) {
 	std::string bitmask(K, 1); // K leading 1's
 	bitmask.resize(N, 0); // N-K trailing 0's
@@ -236,7 +238,10 @@ void World::generateAxis_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, std::vector<
 		for (int k = 0; k < l2.size(); k++) {
 			glm::vec3 appending;
 			MyMath::vectorCross(l1[i], l2[k], appending);
-			returning.push_back(appending);
+			if (appending.x != 0 || appending.y != 0 || appending.z != 0) {
+				returning.push_back(appending);
+
+			}
 		}
 	}
 }
@@ -298,7 +303,10 @@ void World::startRenderLoop() {
 		cam.setMatrix(90.0f, 0.1f, 300.0f);
 		update();
 		detectCollisions();
-		dealWithCollisions();
+		//dealWithCollisions();
+		detectPointFace(*models[0].getHitbox(0), *models[1].getHitbox(0));
+		detectPointFace(*models[1].getHitbox(0), *models[0].getHitbox(0));
+
 
 		renderModels();
 
@@ -345,6 +353,9 @@ bool World::checkHitboxes(Model& model1, Model& model2) {
 	}
 	return false; //not right
 }
+
+
+
 
 
 bool World::checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect) {
@@ -420,4 +431,35 @@ void World::dealWithFirstMovable(int i) {
 void World::dealWithSecondMovable(int i) {
 	glm::vec3 moveBy = currentCollisions[i].normal * currentCollisions[i].amountIntersect;
 	currentCollisions[i].model2->moveBy(moveBy);
+}
+
+std::vector<glm::vec3* > World::detectPointFace(Hitbox& h1, Hitbox& h2) {
+	std::vector<glm::vec3 * > v1;
+	for (int i = 0; i < h2.getVectorsSize(); i++) {
+		v1.push_back(h2.getVec(i));
+	}
+	for (int i = 0; i < h1.getNormalsSize(); i++) {
+		glm::vec3 projectedCm = glm::vec3(0);
+		//std::cout << (*h1.getNormal(i)).x << " " << (*h1.getNormal(i)).y << " " << (*h1.getNormal(i)).z << "\n";
+
+		MyMath::projection(*h1.getNormal(i), (*h1.getCm()), projectedCm);
+		float cm = MyMath::getVecMultiple(*h1.getNormal(i), projectedCm);
+		float max, min;
+		h1.getMaxMin(i, cm, max, min);
+		//std::cout << min << " " << cm << " " << max << "\n";
+
+		for (int k = 0; k < v1.size(); k++) {
+			glm::vec3 v;
+			MyMath::projection(*h1.getNormal(i), *v1[k], v);
+			float multiple = MyMath::getVecMultiple(*h1.getNormal(i), v);
+			if (multiple >= max || multiple <= min) {
+				v1.erase(v1.begin() + k);
+				k--;
+			}
+		}
+	}
+	if (v1.size() > 0) {
+		glfwSetWindowShouldClose(window, true);
+	}
+	return v1;
 }

@@ -4,13 +4,27 @@
 #include "Model.h"
 
 
-Hitbox::Hitbox(std::vector<glm::vec3> given, std::vector<glm::vec3> gNormals, Model * model) {
+Hitbox::Hitbox(std::vector<glm::vec3> given, std::vector<glm::vec3> gNormals, Model * model, std::vector<int> gEdges) {
 	assignedModel = model;
+	for (int i = 0; i < given.size(); i++) {
+		cm += given[i];
+	}
+	cm = cm / (float)given.size();
+	translatedCm = cm;
+	edges = gEdges;
+
+
 
 	positionedVertices = given;
 	vertices = given;
 	normals = gNormals;
 	rotatedNormals = gNormals;
+	for (int i = 0; i < gNormals.size(); i++) {
+		float max, min;
+		this->getMaxMinFromProjection(gNormals[i], max, min);
+		wallsDistance.push_back(max);
+		wallsDistance.push_back(min);
+	}
 }
 
 void Hitbox::update(glm::mat4 * givenFull, glm::mat4* givenRotation) {
@@ -18,6 +32,9 @@ void Hitbox::update(glm::mat4 * givenFull, glm::mat4* givenRotation) {
 	for (int i = 0; i < vertices.size(); i++) {
 		positionedVertices[i] = (*transformation) * glm::vec4(vertices[i], 1);
 	}
+	translatedCm = (*transformation) * glm::vec4(cm, 1.0f);
+	//std::cout << translatedCm.x << " " << translatedCm.y << " " << translatedCm.z << "\n";
+
 	rotation = givenRotation;
 	for (int i = 0; i < normals.size(); i++) {
 		rotatedNormals[i] = (*rotation) * glm::vec4(normals[i], 1);
@@ -27,6 +44,10 @@ void Hitbox::update(glm::mat4 * givenFull, glm::mat4* givenRotation) {
 
 std::vector<glm::vec3> Hitbox::getNormalVectors() {
 	return rotatedNormals;
+}
+
+std::vector<glm::vec3> Hitbox::getVertices() {
+	return positionedVertices;
 }
 
 
@@ -67,3 +88,19 @@ Model* Hitbox::getAssigned() {
 	return assignedModel;
 }
 
+int Hitbox::getVectorsSize() {
+	return vertices.size();
+}
+
+glm::vec3* Hitbox::getNormal(int i) {
+	return &rotatedNormals[i];
+}
+
+glm::vec3* Hitbox::getCm() {
+	return &translatedCm;
+}
+
+void Hitbox::getMaxMin(int i, float givenCm, float& max, float& min) {
+	max = givenCm + wallsDistance[i*2];
+	min = givenCm + wallsDistance[i*2+1];
+}

@@ -34,8 +34,9 @@ void Model::setupModel() {
 	hitboxVectors.push_back(glm::vec3(0, 1, 0));
 	hitboxVectors.push_back(glm::vec3(0, 0, 1));
 	movable = true;
+	std::vector<int> edges = { 0,1,2,3,4,5,6,7,0,4,0,2,1,5,1,3,2,6,3,7,4,6,5,7 };
 
-	Hitbox h = Hitbox(originalCorners, hitboxVectors, this);
+	Hitbox h = Hitbox(originalCorners, hitboxVectors, this, edges);
 	hitboxes.push_back(h);
 }
 

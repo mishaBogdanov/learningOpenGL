@@ -21,6 +21,8 @@
 #include "Model.h"
 #include "floor.h"
 #include <algorithm>
+#include <set>
+
 //#include "Hitbox.h"
 //class Hitbox;
 //class Model;
@@ -76,6 +78,9 @@ private:
 	void dealWithBothMovable(int i);
 	bool checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect);
 	void comb(int N, int K, std::vector<int>& returning);
+	std::vector<glm::vec3* > detectPointFace(Hitbox& h1, Hitbox& h2);
+	std::vector<glm::vec3* > detectEdgeEdge(Hitbox& h1, Hitbox& h2);
+
 
 
 public:

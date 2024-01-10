@@ -26,15 +26,15 @@ float MyMath::getSumParts(glm::vec3& given) {
 	return given.x + given.y + given.z;
 }
 
-float MyMath::getVecMultiple(glm::vec3& first, glm::vec3& second) {
-	if (second.x != 0) {
-		return second.x/first.x;
+float MyMath::getVecMultiple(glm::vec3& first, glm::vec3& second_the_one_that_gets_divided) {
+	if (first.x != 0) {
+		return second_the_one_that_gets_divided.x/first.x;
 	}
-	else if (second.y != 0) {
-		return second.y/first.y;
+	else if (first.y != 0) {
+		return second_the_one_that_gets_divided.y/first.y;
 	}
-	else if (second.z != 0) {
-		return second.z/first.z;
+	else if (first.z != 0) {
+		return second_the_one_that_gets_divided.z/first.z;
 	}
 	else {
 		std::cout << ":(";
