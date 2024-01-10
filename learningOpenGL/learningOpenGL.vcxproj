@@ -175,6 +175,7 @@
     <Image Include="triangleGreggor.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BasicCube.object" />
     <None Include="default.frag" />
     <None Include="default.geom" />
     <None Include="default.vert" />

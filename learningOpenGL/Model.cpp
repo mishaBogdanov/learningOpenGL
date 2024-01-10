@@ -427,21 +427,13 @@ void Model::setupCybertruck(float scale) {
 	bodyNormal.push_back(glm::vec3(0, 1 / sqrt(8.1175480847), 2.84913111048 / sqrt(8.1175480847)));
 }
 
-void Model::addIntersection(IntersectionModel* given) {
-	collisions.push_back(given);
-}
+
 
 Hitbox* Model::getHitbox(int i) {
 	return &hitboxes[i];
 }
 
-void Model::handleCollisions() {
-	for (int i = 0; i < collisions.size(); i++) {
-		if (collisions[i]->model1 == this) {
 
-		}
-		else {
-
-		}
-	}
+void Model::changeIsMovable(bool newValue) {
+	movable = newValue;
 }

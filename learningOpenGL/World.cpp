@@ -190,24 +190,11 @@ void World::update() {
 
 
 
-void World::updatePhysDeltaT() {
-	physDeltaT = physT - glfwGetTime();
-	physT = glfwGetTime();
-}
 
 
 
 
 
-void World::runUpdateCycle(std::vector<Model>* given) {
-	physT = glfwGetTime();
-	while (true) {
-		//test(given, physDeltaT);
-		double time = glfwGetTime();
-		Sleep((physT + 1 / 2 - time) * 1000);
-		updatePhysDeltaT();
-	}
-}
 
 
 void World::comb(int N, int K, std::vector<int>& returning) {
@@ -223,100 +210,14 @@ void World::comb(int N, int K, std::vector<int>& returning) {
 	} while (std::prev_permutation(bitmask.begin(), bitmask.end()));
 }
 
-bool World::colliding_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect, glm::vec3 & collisionPosition) {
-	std::vector<glm::vec3> axis;
-	generateAxis_Hitboxes(hitbox1, hitbox2, axis);
-	bool firstCheck = true;
-	std::vector<int> hitbox1Remaining(hitbox1.getNormalsSize());
-	std::vector<int> hitbox2Remaining(hitbox2.getNormalsSize());
-
-	for (int i = 0; i < hitbox1.getNormalsSize(); i++) {
-		hitbox1Remaining.push_back(i);
-	}
-	for (int i = 0; i < hitbox2.getNormalsSize(); i++) {
-		hitbox2Remaining.push_back(i);
-	}
 
 
 
-	for (int i = 0; i < axis.size(); i++) {
-		float mod1Max, mod1Min, mod2Max, mod2Min;
-		if (axis[i].x != 0 || axis[i].y != 0 || axis[i].z != 0) {
-			hitbox1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
-			hitbox2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
-			bool hitBox1onRight;
-			if (mod1Max < mod2Min || mod1Min > mod2Max) {
-				return false;
-			}
-			if (firstCheck) {
-				if (mod1Max > mod2Min) {
-					hitBox1onRight = false;
-					curintersect = mod1Max - mod2Min;
-				}
-				else {
-					hitBox1onRight = true;
-					curintersect = mod2Max - mod1Min;
-				}
-				normalToIntersect = axis[i];
-				firstCheck = false;
-			}
-			else if (mod1Max > mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
-				hitBox1onRight = false;
-				curintersect = mod1Max - mod2Min;
-				normalToIntersect = axis[i];
-			}
-			else if (mod1Min < mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
-				hitBox1onRight = true;
-				curintersect = mod1Min - mod2Max;
-				normalToIntersect = axis[i];
-			}
-			else if (mod1Max > mod2Min) {
-				hitBox1onRight = false;
-			}
-			else if (mod1Min < mod2Max) {
-				hitBox1onRight = true;
-			}
-			int erased = 0;
-			for (int i = 0; i < hitbox1Remaining.size() - erased; i++) {
-				glm::vec3 returning;
-				MyMath::projection(axis[i], (*hitbox1.getVec(hitbox1Remaining[i])), returning);
-				float vectorScale = MyMath::getVecMultiple(axis[i], returning);
-				if ((vectorScale > mod2Max && hitBox1onRight) ||
-					(vectorScale < mod1Min && !hitBox1onRight)) {
-					hitbox1Remaining.erase(hitbox1Remaining.begin() + i);
-					erased++;
-					i--;
-				}
-			}
-			erased = 0;
-			for (int i = 0; i < hitbox2Remaining.size() - erased; i++) {
-				glm::vec3 returning;
-				MyMath::projection(axis[i], (*hitbox1.getVec(hitbox2Remaining[i])), returning);
-				float vectorScale = MyMath::getVecMultiple(axis[i], returning);
-				if ((vectorScale < mod1Min && hitBox1onRight) ||
-					(vectorScale > mod1Max && !hitBox1onRight)) {
-					hitbox2Remaining.erase(hitbox2Remaining.begin() + i);
-					erased++;
-					i--;
-				}
-			}
-		}
-		
-	}
-	for (int i = 0; i < hitbox1Remaining.size(); i++) {
-		collisionPosition += (*hitbox1.getVec(i));
-	}
-	for (int i = 0; i < hitbox2Remaining.size(); i++) {
-		collisionPosition += (*hitbox2.getVec(i));
-	}
-
-	collisionPosition = collisionPosition / (float)(hitbox1Remaining.size() + hitbox2Remaining.size());
 
 
-	return true;
+void World::changeIsMovable(int pos, bool newValue) {
+	models[pos].changeIsMovable(newValue);
 }
-
-
 
 
 
@@ -340,80 +241,6 @@ void World::generateAxis_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, std::vector<
 	}
 }
 
-bool World::checkHitboxes(Model& model1, Model& model2) {
-
-	for (int i = 0; i < model1.getHitboxesSize(); i++) {
-		for (int k = 0; k < model2.getHitboxesSize(); k++) {
-			float intersectionDistance = 0;
-			glm::vec3 normalCollision;
-			glm::vec3 collisionPosition;
-			bool colliding = colliding_Hitboxes((*model1.getHitbox(i)), (*model2.getHitbox(k)), intersectionDistance, normalCollision, collisionPosition);
-			if (colliding) {
-				glfwSetWindowShouldClose(window, true);
-				return true; //not right
-
-			}
-		}
-	}
-	return false; //not right
-}
-
-
-
-
-//bool World::colliding(Model& mod1, Model& mod2, float& curintersect, glm::vec3& normalToIntersect) {
-//	std::vector<glm::vec3> axis;
-//	generateAxis(mod1, mod2, axis);
-//	bool firstCheck = true;
-//
-//	for (int i = 0; i < axis.size(); i++) {
-//		float mod1Max, mod1Min, mod2Max, mod2Min;
-//		mod1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
-//		mod2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
-//		if (mod1Max < mod2Min || mod1Min > mod2Max) {
-//			return false;
-//		}if (firstCheck) {
-//			if (mod1Max > mod2Min) {
-//				curintersect = mod1Max - mod2Min;
-//			}
-//			else {
-//				curintersect = mod2Max - mod1Min;
-//			}
-//			normalToIntersect = axis[i];
-//			firstCheck = false;
-//		}
-//		else if (mod1Max > mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
-//			curintersect = mod1Max - mod2Min;
-//			normalToIntersect = axis[i];
-//		}
-//		else if (mod1Min < mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
-//			curintersect = mod1Min - mod2Max;
-//			normalToIntersect = axis[i];
-//		}
-//	}
-//
-//	return true;
-//}
-
-//void World::generateAxis(Model& mod1, Model& mod2, std::vector<glm::vec3>& returning) {
-//	std::vector<glm::vec3> l1 = mod1.getHitboxVectors();
-//	std::vector<glm::vec3> l2 = mod2.getHitboxVectors();
-//	for (int i = 0; i < l1.size(); i++) {
-//		returning.push_back(l1[i]);
-//	}
-//
-//	for (int i = 0; i < l2.size(); i++) {
-//		returning.push_back(l2[i]);
-//	}
-//
-//	for (int i = 0; i < l1.size(); i++) {
-//		for (int k = 0; k < l2.size(); k++) {
-//			glm::vec3 appending;
-//			MyMath::vectorCross(l1[i], l2[k], appending);
-//			returning.push_back(appending);
-//		}
-//	}
-//}
 
 
 
@@ -424,52 +251,12 @@ void World::detectCollisions() {
 		glm::vec3 normal;
 		float intersectBy;
 		checkHitboxes(models[modelsToCheck[i]], models[modelsToCheck[i + 1]]);
-		//if (colliding(models[modelsToCheck[i]], models[modelsToCheck[i + 1]], intersectBy, normal)) {
-		//	IntersectionModel model;
-		//	model.model1 = &models[modelsToCheck[i]];
-		//	model.model2 = &models[modelsToCheck[i + 1]];
-		//	model.normal = normal;
-		//	model.amountIntersect = intersectBy;
-		//	currentCollisions.push_back(model);
-		//}
 	}
 }
 
-void::World::dealWithBothMovable(int i) {
-	glm::vec3 t = currentCollisions[i].normal * currentCollisions[i].amountIntersect;
-	(*currentCollisions[i].model2).moveBy(t);
-	glm::vec3 posDifference = glm::normalize((*(*currentCollisions[i].model1).getCm()) - (*(*currentCollisions[i].model2).getCm()));
-	glm::vec3 angular = glm::cross(posDifference, glm::normalize(currentCollisions[i].normal)) / 500.0f * (currentCollisions[i].model1->getMagnitudeVelocity() + currentCollisions[i].model2->getMagnitudeVelocity());
-	(*currentCollisions[i].model1).addAngularVelocity(angular);
-	//glm::vec3 angular2 = angular * (1.0f);
-	(*currentCollisions[i].model2).addAngularVelocity(angular);
-
-	glm::vec3 n = ((*(*currentCollisions[i].model2).getCm()) - (*(*currentCollisions[i].model1).getCm()));
-	n = n / MyMath::getVectorMagnitude(n);
-	float m_eff = 1 / (1 / (*currentCollisions[i].model1).getMass() + 1 / (*currentCollisions[i].model2).getMass());
-	float v_imp = glm::dot(n, ((*currentCollisions[i].model1).getVelocity() - (*currentCollisions[i].model2).getVelocity()));
-	float toBeChangedBounceConstant = 0.1;
-	float J = (1 + toBeChangedBounceConstant) * m_eff * v_imp;
-	glm::vec3 velocityToChange1 = n * (-J) / (*currentCollisions[i].model1).getMass();
-	glm::vec3 velocityToChange2 = n * J / (*currentCollisions[i].model2).getMass();
-	(*currentCollisions[i].model1).addVelocity(velocityToChange1);
-	(*currentCollisions[i].model2).addVelocity(velocityToChange2);
-}
-
-void World::dealWithCollisions() {
-	//if (currentCollisions.size() != 0) {
-	//	std::cout << currentCollisions[0].normal.x << " " << currentCollisions[0].normal.y << " " << currentCollisions[0].normal.z << "\n";
-	//	glfwSetWindowShouldClose(window, true);
-	//}
 
 
-	for (int i = 0; i < currentCollisions.size(); i++) {
-		if (currentCollisions[i].model1->isMovable() && currentCollisions[i].model2->isMovable()) {
-			dealWithBothMovable(i);
-		}
-	}
-	currentCollisions.clear();
-}
+
 
 
 
@@ -520,7 +307,7 @@ void World::startRenderLoop() {
 
 
 
-		processInput();
+		//processInput();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -533,4 +320,104 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
+}
+
+
+
+bool World::checkHitboxes(Model& model1, Model& model2) {
+
+	for (int i = 0; i < model1.getHitboxesSize(); i++) {
+		for (int k = 0; k < model2.getHitboxesSize(); k++) {
+			float intersectionDistance = 0;
+			glm::vec3 normalCollision = glm::vec3(0);
+			bool colliding = checkHitboxesColliding((*model1.getHitbox(i)), (*model2.getHitbox(k)), intersectionDistance, normalCollision);
+			if (colliding) {
+				//glfwSetWindowShouldClose(window, true);
+				//return true; //not right
+				IntersectionModel model;
+				model.model1 = &model1;
+				model.model2 = &model2;
+				model.normal = normalCollision;
+				model.amountIntersect = intersectionDistance;
+				currentCollisions.push_back(model);
+			}
+		}
+	}
+	return false; //not right
+}
+
+
+bool World::checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect) {
+	std::vector<glm::vec3> axis;
+	generateAxis_Hitboxes(hitbox1, hitbox2, axis);
+	bool firstCheck = true;
+
+	for (int i = 0; i < axis.size(); i++) {
+		float mod1Max, mod1Min, mod2Max, mod2Min;
+		hitbox1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
+		hitbox2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
+		if (mod1Max < mod2Min || mod1Min > mod2Max) {
+			return false;
+		}if (firstCheck) {
+			if (mod1Max > mod2Min) {
+				curintersect = mod1Max - mod2Min;
+			}
+			else {
+				curintersect = mod2Max - mod1Min;
+			}
+			normalToIntersect = axis[i];
+			firstCheck = false;
+		}
+		else if (mod1Max > mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
+			curintersect = mod1Max - mod2Min;
+			normalToIntersect = axis[i];
+		}
+		else if (mod1Min < mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
+			curintersect = mod1Min - mod2Max;
+			normalToIntersect = axis[i];
+		}
+	}
+
+	return true;
+}
+
+
+void World::dealWithCollisions() {
+	//if (currentCollisions.size() != 0) {
+	//	std::cout << currentCollisions[0].normal.x << " " << currentCollisions[0].normal.y << " " << currentCollisions[0].normal.z << "\n";
+	//	glfwSetWindowShouldClose(window, true);
+	//}
+
+
+	for (int i = 0; i < currentCollisions.size(); i++) {
+		if (currentCollisions[i].model1->isMovable() && currentCollisions[i].model2->isMovable()) {
+			dealWithBothMovable(i);
+		}
+		else if(currentCollisions[i].model1->isMovable()){
+			dealWithFirstMovable(i);
+		}
+		else if (currentCollisions[i].model2->isMovable()) {
+			dealWithSecondMovable(i);
+		}
+	}
+	currentCollisions.clear();
+}
+
+void World::dealWithBothMovable(int i) {
+	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect / 2.0f;
+	glm::vec3 moveBy1 = moveBy2 * (-1.0f);
+
+	currentCollisions[i].model1->moveBy(moveBy1);
+	currentCollisions[i].model2->moveBy(moveBy2);
+
+}
+
+void World::dealWithFirstMovable(int i) {
+	glm::vec3 moveBy = currentCollisions[i].normal * (-1.0f) * currentCollisions[i].amountIntersect;
+	currentCollisions[i].model1->moveBy(moveBy);
+}
+
+void World::dealWithSecondMovable(int i) {
+	glm::vec3 moveBy = currentCollisions[i].normal * currentCollisions[i].amountIntersect;
+	currentCollisions[i].model2->moveBy(moveBy);
 }

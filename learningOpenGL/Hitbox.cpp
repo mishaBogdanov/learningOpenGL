@@ -59,7 +59,11 @@ glm::vec3* Hitbox::getVec(int i) {
 	return &positionedVertices[i];
 }
 
-void Hitbox::addCollision(IntersectionModel given) {
-	(*assignedModel).addIntersection(&given);
+//void Hitbox::addCollision(IntersectionModel given) {
+//	(*assignedModel).addIntersection(&given);
+//}
+
+Model* Hitbox::getAssigned() {
+	return assignedModel;
 }
 

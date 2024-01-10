@@ -7,12 +7,19 @@
 #include "Mesh.h"
 #include "Hitbox.h"
 
+struct Contacts {
+	glm::vec3 positions[4];
+	Hitbox * hitbox1;
+	Hitbox * hitbox2;
+	int numVertices;
+	glm::vec3 normal;
+};
+
 struct IntersectionModel {
 	Model* model1;
 	Model* model2;
 	float amountIntersect;
 	glm::vec3 normal;
-	glm::vec3 intersectionPosition;
 };
 
 
@@ -40,7 +47,6 @@ private:
 	std::vector<glm::vec3> hitboxVectors;
 
 	std::vector<Hitbox> hitboxes;
-	std::vector<IntersectionModel *> collisions;
 
 
 
@@ -90,5 +96,7 @@ public:
 
 	bool isMovable();
 	void handleCollisions();
+
+	void changeIsMovable(bool value);
 };
 

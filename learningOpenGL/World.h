@@ -64,29 +64,26 @@ private:
 	Model* drivable;
 
 
-	void runUpdateCycle(std::vector<Model>* given);
-	void updatePhysDeltaT();
 
-	void comb(int N, int K, std::vector<int> & returning);
-
-
-	//bool colliding(Model& mod1, Model& mod2, float& curintersect, glm::vec3& normalToIntersect);
-	bool colliding_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect, glm::vec3& collisionPosition);
-	//void generateAxis(Model& mod1, Model& model2, std::vector<glm::vec3>& returning);
 	void generateAxis_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, std::vector<glm::vec3>& returning);
 	bool checkHitboxes(Model& model1, Model& model2);
 
 	void detectCollisions();
 	void dealWithCollisions();
+	void dealWithFirstMovable(int i);
+	void dealWithSecondMovable(int i);
+
 	void dealWithBothMovable(int i);
+	bool checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect);
+	void comb(int N, int K, std::vector<int>& returning);
 
 
 public:
 	World(float distX, float distY, float distZ, int divs);
 	void setupGLFW();
 	void update();
-	void addFloor(int gNum, float gSpacing, float gHeight, float gz, float gx);
 
+	void addFloor(int gNum, float gSpacing, float gHeight, float gz, float gx);
 	void addModel(Model& given);
 	void addModel(std::string given);
 	void addModel(std::string given, glm::vec3 location);
@@ -95,15 +92,18 @@ public:
 	void addModel(std::string given, float scale, bool v, glm::vec3 velocity);
 
 	void rotateModel(int location, float angle, glm::vec3& norm);
+	void changeIsMovable(int pos, bool value);
 	void setVelocity(int index, glm::vec3 newVelocity);
 
-	void startRenderLoop();
 	void screenToPixel();
 	void clearScreen();
-	void processInput();
-	void renderModels();
-	void renderFLoors(); //!!! ^
-
 	
+	void processInput();
+
+	void renderModels();
+	void renderFLoors();
+	void startRenderLoop();
+
+
 };
 

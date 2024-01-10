@@ -174,6 +174,9 @@
     <None Include="floorFill.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="BasicCube.object">
+      <Filter>Resource Files\models</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="learningOpenGL.rc">

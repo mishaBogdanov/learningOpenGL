@@ -18,6 +18,7 @@ private:
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> positionedVertices;
 
+
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec3> rotatedNormals;
 
@@ -33,7 +34,6 @@ public:
 	void getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& min);
 	glm::vec3* getVec(int i);
 	void addCollision(IntersectionModel model);
-
-	
+	Model* getAssigned();
 };
 
