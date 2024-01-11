@@ -104,3 +104,12 @@ void Hitbox::getMaxMin(int i, float givenCm, float& max, float& min) {
 	max = givenCm + wallsDistance[i*2];
 	min = givenCm + wallsDistance[i*2+1];
 }
+
+int Hitbox::getEdgeNumber() {
+	return edges.size() / 2;
+}
+
+void Hitbox::getEdge(int i, glm::vec3& e1, glm::vec3& e2) {
+	e1 = positionedVertices[edges[i * 2]];
+	e2 = positionedVertices[edges[i * 2+1]];
+}

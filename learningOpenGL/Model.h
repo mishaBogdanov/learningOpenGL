@@ -7,11 +7,8 @@
 #include "Mesh.h"
 #include "Hitbox.h"
 
-struct Contacts {
-	glm::vec3 positions[4];
-	Hitbox * hitbox1;
-	Hitbox * hitbox2;
-	int numVertices;
+struct Contact {
+	glm::vec3 position;
 	glm::vec3 normal;
 };
 

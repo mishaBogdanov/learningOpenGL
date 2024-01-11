@@ -5,7 +5,7 @@
 #include "MyMath.h"
 #include "Model.h"
 #include "Hitbox.h"
-
+#include <map>
 
 
 
@@ -255,7 +255,11 @@ void World::detectCollisions() {
 	for (int i = 0; i < modelsToCheck.size(); i += 2) {
 		glm::vec3 normal;
 		float intersectBy;
-		checkHitboxes(models[modelsToCheck[i]], models[modelsToCheck[i + 1]]);
+		IntersectionModel model;
+		bool colliding = checkHitboxes(models[modelsToCheck[i]], models[modelsToCheck[i + 1]], model);
+		if (colliding) {
+			currentCollisions.push_back(model);
+		}
 	}
 }
 
@@ -303,10 +307,10 @@ void World::startRenderLoop() {
 		cam.setMatrix(90.0f, 0.1f, 300.0f);
 		update();
 		detectCollisions();
-		//dealWithCollisions();
-		detectPointFace(*models[0].getHitbox(0), *models[1].getHitbox(0));
-		detectPointFace(*models[1].getHitbox(0), *models[0].getHitbox(0));
-
+		dealWithCollisions();
+		//detectPointFace(*models[0].getHitbox(0), *models[1].getHitbox(0));
+		//detectPointFace(*models[1].getHitbox(0), *models[0].getHitbox(0));
+		//detectEdgeEdge(*models[1].getHitbox(0), *models[0].getHitbox(0));
 
 		renderModels();
 
@@ -332,26 +336,28 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 
 
-bool World::checkHitboxes(Model& model1, Model& model2) {
-
+bool World::checkHitboxes(Model& model1, Model& model2, IntersectionModel & given) {
+	float curDistance = 0;
 	for (int i = 0; i < model1.getHitboxesSize(); i++) {
 		for (int k = 0; k < model2.getHitboxesSize(); k++) {
 			float intersectionDistance = 0;
 			glm::vec3 normalCollision = glm::vec3(0);
 			bool colliding = checkHitboxesColliding((*model1.getHitbox(i)), (*model2.getHitbox(k)), intersectionDistance, normalCollision);
-			if (colliding) {
-				//glfwSetWindowShouldClose(window, true);
-				//return true; //not right
-				IntersectionModel model;
-				model.model1 = &model1;
-				model.model2 = &model2;
-				model.normal = normalCollision;
-				model.amountIntersect = intersectionDistance;
-				currentCollisions.push_back(model);
+			if (colliding && intersectionDistance > curDistance) {
+				given.model1 = &model1;
+				given.model2 = &model2;
+				given.normal = normalCollision;
+				given.amountIntersect = intersectionDistance;
+				curDistance = intersectionDistance;
 			}
 		}
 	}
-	return false; //not right
+	if (curDistance == 0) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 
@@ -394,13 +400,11 @@ bool World::checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curi
 
 
 void World::dealWithCollisions() {
-	//if (currentCollisions.size() != 0) {
-	//	std::cout << currentCollisions[0].normal.x << " " << currentCollisions[0].normal.y << " " << currentCollisions[0].normal.z << "\n";
-	//	glfwSetWindowShouldClose(window, true);
-	//}
+
 
 
 	for (int i = 0; i < currentCollisions.size(); i++) {
+
 		if (currentCollisions[i].model1->isMovable() && currentCollisions[i].model2->isMovable()) {
 			dealWithBothMovable(i);
 		}
@@ -415,11 +419,18 @@ void World::dealWithCollisions() {
 }
 
 void World::dealWithBothMovable(int i) {
+
+
 	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect / 2.0f;
 	glm::vec3 moveBy1 = moveBy2 * (-1.0f);
 
-	currentCollisions[i].model1->moveBy(moveBy1);
-	currentCollisions[i].model2->moveBy(moveBy2);
+	//currentCollisions[i].model1->moveBy(moveBy1);
+	//currentCollisions[i].model2->moveBy(moveBy2);
+	std::vector<Contact> contacts;
+	generateContacts(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
+	glfwSetWindowShouldClose(window, true);
+
+	
 
 }
 
@@ -433,20 +444,24 @@ void World::dealWithSecondMovable(int i) {
 	currentCollisions[i].model2->moveBy(moveBy);
 }
 
-std::vector<glm::vec3* > World::detectPointFace(Hitbox& h1, Hitbox& h2) {
+void World::detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given) {
 	std::vector<glm::vec3 * > v1;
+	std::map<glm::vec3*, float> valsFloat;
+	std::map<glm::vec3*, glm::vec3> valsVector;
 	for (int i = 0; i < h2.getVectorsSize(); i++) {
 		v1.push_back(h2.getVec(i));
+		valsFloat.insert({ h2.getVec(i) , -1 });
+		valsVector.insert({ h2.getVec(i), glm::vec3(0) });
 	}
+	//!!!
+	// !!! for now it's only checking against one box, have to make it against 2.
 	for (int i = 0; i < h1.getNormalsSize(); i++) {
 		glm::vec3 projectedCm = glm::vec3(0);
-		//std::cout << (*h1.getNormal(i)).x << " " << (*h1.getNormal(i)).y << " " << (*h1.getNormal(i)).z << "\n";
-
 		MyMath::projection(*h1.getNormal(i), (*h1.getCm()), projectedCm);
 		float cm = MyMath::getVecMultiple(*h1.getNormal(i), projectedCm);
 		float max, min;
-		h1.getMaxMin(i, cm, max, min);
-		//std::cout << min << " " << cm << " " << max << "\n";
+		h1.getMaxMin(i, cm, max, min); 
+
 
 		for (int k = 0; k < v1.size(); k++) {
 			glm::vec3 v;
@@ -456,10 +471,106 @@ std::vector<glm::vec3* > World::detectPointFace(Hitbox& h1, Hitbox& h2) {
 				v1.erase(v1.begin() + k);
 				k--;
 			}
+			else if(multiple < max && max-multiple > valsFloat[v1[k]]) {
+				valsFloat[v1[k]] = max - multiple;
+				valsVector[v1[k]] = *h1.getNormal(i);
+			}
+			else if (multiple > min && multiple - min > valsFloat[v1[k]]) {
+				valsFloat[v1[k]] = multiple - min;
+				valsVector[v1[k]] = *h1.getNormal(i);
+			}
 		}
 	}
-	if (v1.size() > 0) {
-		glfwSetWindowShouldClose(window, true);
+	for (int i = 0; i < v1.size(); i++) {
+		Contact contact;
+		contact.position = *v1[i];
+		contact.normal = valsVector[v1[i]];
+		given.push_back(contact);
 	}
-	return v1;
 }
+
+
+glm::vec3 World::getClosestPointsOnLines(glm::vec3& a0, glm::vec3& b0, glm::vec3& a1, glm::vec3& b1, bool & worked) {
+	glm::vec3 v1 = b0 - a0;
+	glm::vec3 v2 = b1 - a1;
+	glm::vec3 cross = glm::cross(v1, v2);
+	if (MyMath::getVectorMagnitudeSquared(cross) < 0.001) {
+		worked = false;
+		return v1;
+	}
+	float t = glm::dot(glm::cross((a1 - a0), v2), cross) / MyMath::getVectorMagnitudeSquared(cross);
+	worked = t < 0 ? false : t>1 ? false : true;
+	return a0 + t * v1;
+}
+
+void World::detectEdgeEdge(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given) {
+	for (int i = 0; i < h1.getEdgeNumber(); i++) {
+		for (int k = 0; k < h2.getEdgeNumber(); k++) {
+			glm::vec3 a0, b0, a1, b1;
+			h1.getEdge(i, a0, b0);
+			h2.getEdge(k, a1, b1);
+			bool worked1, worked2;
+			glm::vec3 onh1 = getClosestPointsOnLines(a0, b0, a1, b1, worked1);
+			glm::vec3 onh2 = getClosestPointsOnLines(a1, b1, a0, b0, worked2);
+			
+			glm::vec3 h1CmToOnH1 = *h1.getCm() - onh1;
+			glm::vec3 h1CmToOnH2 = *h1.getCm() - onh2;
+
+			glm::vec3 h2CmToOnH1 = *h2.getCm() - onh1;
+			glm::vec3 h2CmToOnH2 = *h2.getCm() - onh2;
+
+			glm::vec3 h1ToPointA = onh1 - a0;
+			glm::vec3 h1ToPointB = onh1 - b0;
+			glm::vec3 h2ToPointA = onh2 - a1;
+			glm::vec3 h2ToPointB = onh2 - b1;
+
+			glm::vec3 onh1ToOnH2 = onh2 - onh1;
+			if (worked1 && worked2 &&
+				MyMath::getVectorMagnitudeSquared(h1CmToOnH1) > MyMath::getVectorMagnitudeSquared(h1CmToOnH2) &&
+				MyMath::getVectorMagnitudeSquared(h2CmToOnH1) < MyMath::getVectorMagnitudeSquared(h2CmToOnH2) &&
+				MyMath::getVectorMagnitudeSquared(h1ToPointA) > MyMath::getVectorMagnitudeSquared(onh1ToOnH2) &&
+				MyMath::getVectorMagnitudeSquared(h1ToPointB) > MyMath::getVectorMagnitudeSquared(onh1ToOnH2)&&
+				MyMath::getVectorMagnitudeSquared(h2ToPointA) > MyMath::getVectorMagnitudeSquared(onh1ToOnH2)&&
+				MyMath::getVectorMagnitudeSquared(h2ToPointB) > MyMath::getVectorMagnitudeSquared(onh1ToOnH2)
+				) {
+				glm::vec3 appending = (onh1 + onh2) / 2.0f;
+				//std::cout << "\n\n this Ran " << onh1.x << " " << onh1.y << " " << onh1.z << " on vertices: \n =====================\n" 
+				//	<< a0.x << " " << a0.y << " " << a0.z << "\n" << b0.x << " " << b0.y << " " << b0.z << "\n\n" 
+				//	<< a1.x << " " << a1.y << " " << a1.z << "\n" << b1.x << " " << b1.y << " " << b1.z <<  " "<< "\n" << i << " " << k << "\n======================\n";
+				//std::cout << "this Ran  " << onh2.x << " " << onh2.y << " " << onh2.z << "\n";
+
+					
+
+
+				Contact contact;
+				contact.position = appending;
+				glm::vec3 normal = glm::normalize(glm::cross(b0 - a0, b1 - a1));
+				if (glm::dot(appending - *h1.getCm(), normal) < 0) {
+					normal = normal * (-1.0f);
+				}
+				contact.normal = normal;
+				given.push_back(contact);
+			}
+		}
+	}
+}
+
+void World::generateContacts(Model& model1, Model& model2, std::vector <Contact> & given) {
+	for (int i = 0; i < model1.getHitboxesSize(); i++) {
+		for (int k = 0; k < model2.getHitboxesSize(); k++) {
+			detectPointFace(*model1.getHitbox(i), *model2.getHitbox(k), given);
+			std::cout << given.size() << "\n";
+			//for (int i = 0; i < given.size(); i++) {
+			//	std::cout << given[i].position.x << " " << given[i].position.y << " " << given[i].position.z << "\n";
+			//}
+			detectEdgeEdge(*model1.getHitbox(i), *model2.getHitbox(k), given);
+			std::cout << given.size() << "\n";
+			//for (int i = 0; i < given.size(); i++) {
+			//	std::cout << given[i].position.x << " " << given[i].position.y << " " << given[i].position.z << "\n";
+			//}
+
+		}
+	}
+}
+
+

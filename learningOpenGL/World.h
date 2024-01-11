@@ -68,18 +68,20 @@ private:
 
 
 	void generateAxis_Hitboxes(Hitbox& hitbox1, Hitbox& hitbox2, std::vector<glm::vec3>& returning);
-	bool checkHitboxes(Model& model1, Model& model2);
+	bool checkHitboxes(Model& model1, Model& model2, IntersectionModel & given);
 
 	void detectCollisions();
 	void dealWithCollisions();
 	void dealWithFirstMovable(int i);
 	void dealWithSecondMovable(int i);
+	void generateContacts(Model& m1, Model& m2, std::vector<Contact>& given);
 
 	void dealWithBothMovable(int i);
 	bool checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect);
 	void comb(int N, int K, std::vector<int>& returning);
-	std::vector<glm::vec3* > detectPointFace(Hitbox& h1, Hitbox& h2);
-	std::vector<glm::vec3* > detectEdgeEdge(Hitbox& h1, Hitbox& h2);
+	void detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given);
+	void detectEdgeEdge(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given);
+	glm::vec3 getClosestPointsOnLines(glm::vec3& a0, glm::vec3& b0, glm::vec3& a1, glm::vec3& b1, bool & worked);
 
 
 

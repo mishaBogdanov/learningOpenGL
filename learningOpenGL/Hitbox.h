@@ -44,5 +44,7 @@ public:
 	glm::vec3* getNormal(int i);
 	glm::vec3* getCm();
 	void getMaxMin(int i, float givenCm, float& max, float& min);
+	int getEdgeNumber();
+	void getEdge(int i, glm::vec3& g1, glm::vec3& g2);
 };
 
