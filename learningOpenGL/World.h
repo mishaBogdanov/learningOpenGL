@@ -80,8 +80,10 @@ private:
 	bool checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curintersect, glm::vec3& normalToIntersect);
 	void comb(int N, int K, std::vector<int>& returning);
 	void detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given);
+	void correctNormalsToPointRightDirection(Model& h1, Model& h2, std::vector<Contact>& given);
 	void detectEdgeEdge(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given);
 	glm::vec3 getClosestPointsOnLines(glm::vec3& a0, glm::vec3& b0, glm::vec3& a1, glm::vec3& b1, bool & worked);
+	void addImpulses(Model& m1, Model& m2, std::vector<Contact>& givenContacts);
 
 
 

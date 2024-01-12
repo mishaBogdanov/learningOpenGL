@@ -38,6 +38,8 @@ void Model::setupModel() {
 
 	Hitbox h = Hitbox(originalCorners, hitboxVectors, this, edges);
 	hitboxes.push_back(h);
+	bounceFactor = 0.5f;
+	frictionFactor = 0.5f;
 }
 
 
@@ -150,7 +152,7 @@ std::vector<glm::vec3> Model::getHitboxVectors() {
 	return returning;
 }
 
-void Model::getHitboxes(Hitbox * & firstHitbox, int & size) {
+void Model::getHitboxes(Hitbox*& firstHitbox, int& size) {
 	firstHitbox = &hitboxes[0];
 	size = hitboxes.size();
 }
@@ -188,7 +190,7 @@ void Model::getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& mi
 
 
 bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 newLocation) {
-	
+
 
 	std::ifstream file(given);
 	std::vector<glm::vec3> Vertices = {};
@@ -277,8 +279,31 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		mesh.push_back(Mesh(Vertices, Indices));
 		Vertices.clear();
 		Indices.clear();
+		//maxDistFromCm = sqrt(PosX * PosX + PosY * PosY + PosZ * PosZ);
+		//if (sqrt(PosX * PosX + PosY * PosY + NegZ * NegZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(PosX * PosX + PosY * PosY + NegZ * NegZ);
+		//}if (sqrt(PosX * PosX + NegY * NegY + PosZ * PosZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(PosX * PosX + NegY * NegY + PosZ * PosZ);
+		//}if (sqrt(PosX * PosX + NegY * NegY + NegZ * NegZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(PosX * PosX + NegY * NegY + NegZ * NegZ);
+		//}if (sqrt(PosX * PosX + PosY * PosY + PosZ * PosZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(NegX*NegX + PosY * PosY + PosZ * PosZ);
+		//}if (sqrt(NegX * NegX + PosY * PosY + NegZ * NegZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(NegX * NegX + PosY * PosY + NegZ * NegZ);
+		//}if (sqrt(NegX * NegX + NegY * NegY + PosZ * PosZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(NegX * NegX + NegY * NegY + PosZ * PosZ);
+		//}if (sqrt(NegX * NegX + NegY * NegY + NegZ * NegZ) > maxDistFromCm) {
+		//	maxDistFromCm = sqrt(NegX * NegX + NegY * NegY + NegZ * NegZ);
+		//}
+		distToCenter.push_back(PosX);
+		distToCenter.push_back(NegX);
+		distToCenter.push_back(PosY);
+		distToCenter.push_back(NegY);
+		distToCenter.push_back(PosZ);
+		distToCenter.push_back(NegZ);
 
-		originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
+
+			originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
 		originalCorners.push_back(glm::vec3(PosX, PosY, NegZ));
 		originalCorners.push_back(glm::vec3(PosX, NegY, PosZ));
 		originalCorners.push_back(glm::vec3(PosX, NegY, NegZ));
@@ -290,7 +315,7 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 			corners.push_back(originalCorners[i]);
 		}
 
-		
+
 
 
 		glm::vec3 currentSum = corners[0];
@@ -314,7 +339,9 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 
 
 void Model::rotate(float angle, glm::vec3& norm) {
-	translation = glm::rotate(translation, glm::radians(angle), norm);
+	glm::mat4 rot = glm::mat4(1);
+	rot = glm::rotate(rot, glm::radians(angle), norm);
+	translation = rot * translation;
 }
 
 void Model::moveBy(glm::vec3& given) {
@@ -437,4 +464,38 @@ Hitbox* Model::getHitbox(int i) {
 
 void Model::changeIsMovable(bool newValue) {
 	movable = newValue;
+}
+
+void Model::addImpulse(Impulse imp) {
+	impulses.push_back(imp);
+}
+
+float Model::getBounceFactor() {
+	return bounceFactor;
+}
+
+float Model::getFrictionFactor() {
+	return frictionFactor;
+}
+
+glm::vec3* Model::getAngularVelocity() {
+	return &angularVelocityDirection;
+}
+
+void Model::dealWithImpulses() {
+	for (int i = 0; i < impulses.size(); i++) {
+		glm::vec3 cmToImpulse = impulses[i].position - cm;
+		cmToImpulse.x = cmToImpulse.x / distToCenter[0];
+		cmToImpulse.y = cmToImpulse.y / distToCenter[2];
+		cmToImpulse.z = cmToImpulse.z / distToCenter[4];
+
+		
+
+		cmToImpulse = glm::normalize(cmToImpulse);
+		velocity += glm::dot(cmToImpulse, glm::normalize( - impulses[i].direction)) * impulses[i].direction;
+		angularVelocityDirection += glm::cross(cmToImpulse, impulses[i].direction);
+
+
+	}
+	impulses.clear();
 }

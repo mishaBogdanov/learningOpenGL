@@ -19,6 +19,11 @@ struct IntersectionModel {
 	glm::vec3 normal;
 };
 
+struct Impulse {
+	glm::vec3 direction;
+	glm::vec3 position;
+};
+
 
 class Model
 {
@@ -46,8 +51,14 @@ private:
 	std::vector<Hitbox> hitboxes;
 
 
+	std::vector<Impulse> impulses;
+	//float maxDistFromCm;
+	std::vector<float> distToCenter;
 
+
+	float bounceFactor;
 	float mass;
+	float frictionFactor;
 
 	void setupModel();
 	void setupCybertruck(float scale);
@@ -95,5 +106,11 @@ public:
 	void handleCollisions();
 
 	void changeIsMovable(bool value);
+
+	void addImpulse(Impulse imp);
+	void dealWithImpulses();
+	float getBounceFactor();
+	float getFrictionFactor();
+	glm::vec3* getAngularVelocity();
 };
 
