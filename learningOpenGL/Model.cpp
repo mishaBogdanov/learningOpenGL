@@ -303,7 +303,7 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		distToCenter.push_back(NegZ);
 
 
-			originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
+		originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
 		originalCorners.push_back(glm::vec3(PosX, PosY, NegZ));
 		originalCorners.push_back(glm::vec3(PosX, NegY, PosZ));
 		originalCorners.push_back(glm::vec3(PosX, NegY, NegZ));
@@ -493,7 +493,7 @@ void Model::dealWithImpulses() {
 
 		cmToImpulse = glm::normalize(cmToImpulse);
 		velocity += glm::dot(cmToImpulse, glm::normalize( - impulses[i].direction)) * impulses[i].direction;
-		angularVelocityDirection += glm::cross(cmToImpulse, impulses[i].direction);
+		angularVelocityDirection += glm::cross(cmToImpulse, impulses[i].direction)/ 30.0f;
 
 
 	}

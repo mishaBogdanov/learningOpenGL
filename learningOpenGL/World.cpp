@@ -261,8 +261,8 @@ void World::detectCollisions() {
 		float intersectBy;
 		IntersectionModel model;
 		bool colliding = checkHitboxes(models[modelsToCheck[i]], models[modelsToCheck[i + 1]], model);
-		if (colliding) {
 
+		if (colliding) {
 			currentCollisions.push_back(model);
 		}
 	}
@@ -342,13 +342,15 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 
 bool World::checkHitboxes(Model& model1, Model& model2, IntersectionModel& given) {
-	float curDistance = 0;
+	float curDistance = -1.0f;
 	for (int i = 0; i < model1.getHitboxesSize(); i++) {
 		for (int k = 0; k < model2.getHitboxesSize(); k++) {
-			float intersectionDistance = 0;
+
+			float intersectionDistance = -1.0f;
 			glm::vec3 normalCollision = glm::vec3(0);
 			bool colliding = checkHitboxesColliding((*model1.getHitbox(i)), (*model2.getHitbox(k)), intersectionDistance, normalCollision);
 			if (colliding && intersectionDistance > curDistance) {
+
 				given.model1 = &model1;
 				given.model2 = &model2;
 				given.normal = normalCollision;
@@ -357,7 +359,7 @@ bool World::checkHitboxes(Model& model1, Model& model2, IntersectionModel& given
 			}
 		}
 	}
-	if (curDistance == 0) {
+	if (curDistance <= 0) {
 		return false;
 	}
 	else {
@@ -378,7 +380,8 @@ bool World::checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curi
 		float mod1Max, mod1Min, mod2Max, mod2Min;
 		hitbox1.getMaxMinFromProjection(axis[i], mod1Max, mod1Min);
 		hitbox2.getMaxMinFromProjection(axis[i], mod2Max, mod2Min);
-		if (mod1Max < mod2Min || mod1Min > mod2Max) {
+		//std::cout << mod1Max << " " << mod1Min << " " << mod2Max << " " << mod2Min << "\n";
+		if (mod1Max <= mod2Min || mod1Min >= mod2Max) {
 			return false;
 		}
 		if (firstCheck) {
@@ -391,15 +394,19 @@ bool World::checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curi
 			normalToIntersect = axis[i];
 			firstCheck = false;
 		}
-		else if (mod1Max > mod2Min && curintersect > mod1Max - mod2Min) {
+		else if (mod1Max >= mod2Min && curintersect > mod1Max - mod2Min) {
+			//std::cout << "ran option 1 \n";
 			curintersect = mod1Max - mod2Min;
 			normalToIntersect = axis[i];
 		}
-		else if (mod1Min < mod2Max && curintersect > mod2Max - mod1Min) {
+		else if (mod1Min <= mod2Max && curintersect > mod2Max - mod1Min) {
+			//std::cout << "ran option 2 \n";
+
 			curintersect = mod2Max - mod1Min;
 			normalToIntersect = axis[i];
 		}
 	}
+	//std::cout << curintersect << "\n";
 
 	return true;
 }
@@ -427,7 +434,7 @@ void World::dealWithCollisions() {
 void World::dealWithBothMovable(int i) {
 
 
-	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect * 10.0f;
+	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect ;
 	glm::vec3 moveBy1 = moveBy2 * (-1.0f);
 
 
@@ -436,8 +443,11 @@ void World::dealWithBothMovable(int i) {
 	addImpulses(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
 	currentCollisions[i].model1->dealWithImpulses();
 	currentCollisions[i].model2->dealWithImpulses();
+
+
+
 	currentCollisions[i].model1->moveBy(moveBy1);
-	currentCollisions[i].model2->moveBy(moveBy2);
+	currentCollisions[i].model2->moveBy(moveBy2); 
 }
 
 void World::dealWithFirstMovable(int i) {
@@ -477,13 +487,15 @@ void World::detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given)
 				v1.erase(v1.begin() + k);
 				k--;
 			}
-			else if (multiple < max && max - multiple > valsFloat[v1[k]]) {
-				valsFloat[v1[k]] = max - multiple;
-				valsVector[v1[k]] = *h1.getNormal(i);
-			}
-			else if (multiple > min && multiple - min > valsFloat[v1[k]]) {
-				valsFloat[v1[k]] = multiple - min;
-				valsVector[v1[k]] = *h1.getNormal(i);
+			else {
+				if (multiple < max && max - multiple > valsFloat[v1[k]]) {
+					valsFloat[v1[k]] = max - multiple;
+					valsVector[v1[k]] = *h1.getNormal(i);
+				}
+				if (multiple > min && multiple - min > valsFloat[v1[k]]) {
+					valsFloat[v1[k]] = multiple - min;
+					valsVector[v1[k]] = *h1.getNormal(i);
+				}
 			}
 		}
 	}
@@ -577,6 +589,9 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 			detectPointFace(*model1.getHitbox(i), *model2.getHitbox(k), given);
 			detectPointFace(*model2.getHitbox(i), *model1.getHitbox(k), given);
 			correctNormalsToPointRightDirection(model1, model2, given);
+			//for (int i = 0; i < given.size(); i++) {
+			//	std::cout << given[i].normal.x << " " << given[i].normal.y << " " << given[i].normal.z << "\n";
+			//}
 
 			//std::cout << given.size() << "\n";
 			//for (int i = 0; i < given.size(); i++) {
@@ -585,6 +600,7 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 			//	std::cout << given[i].normal.x << " " << given[i].normal.y << " " << given[i].normal.z << "\n";
 			//}
 			detectEdgeEdge(*model1.getHitbox(i), *model2.getHitbox(k), given);
+
 			//std::cout << given.size() << "\n";
 			//for (int i = 0; i < given.size(); i++) {
 			//	std::cout << "\nvec: \n";
@@ -604,8 +620,7 @@ void World::addImpulses(Model& model1, Model& model2, std::vector<Contact>& vec)
 		float bounceFactor = model1.getBounceFactor() * model2.getBounceFactor();
 		float frictionFactor = model1.getFrictionFactor() * model2.getFrictionFactor();
 
-		float scale = (glm::dot(model1.getVelocity() - model2.getVelocity(), vec[i].normal) + glm::dot(*model1.getAngularVelocity() - *model2.getAngularVelocity(), vec[i].normal)) * bounceFactor * 1.0f;
-
+		float scale = (glm::dot(model1.getVelocity() - model2.getVelocity(), vec[i].normal) + glm::dot(*model1.getAngularVelocity() - *model2.getAngularVelocity(), vec[i].normal)) * bounceFactor * 2.0f;
 		Impulse impOn2;
 		impOn2.direction = vec[i].normal * scale / (float)vec.size();
 		impOn2.position = vec[i].position;
