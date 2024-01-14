@@ -59,7 +59,7 @@ private:
 	wchar_t* screen = new wchar_t[200 * 100 + 1];
 	float pixels[200 * 100 * 3] = { 0 };
 
-	Camera cam = Camera(200, 100 * xScale, 1, glm::vec3(0.0f, 0.0f, 2.0f));
+	Camera cam = Camera(200, 100 * xScale, 1, glm::vec3(0.0f, 20.0f, 20.0f));
 
 	bool pushed = false;
 	bool isDriving = false;

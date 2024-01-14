@@ -434,7 +434,7 @@ void World::dealWithCollisions() {
 void World::dealWithBothMovable(int i) {
 
 
-	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect ;
+	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect/2.0f ;
 	glm::vec3 moveBy1 = moveBy2 * (-1.0f);
 
 
@@ -588,7 +588,6 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 		for (int k = 0; k < model2.getHitboxesSize(); k++) {
 			detectPointFace(*model1.getHitbox(i), *model2.getHitbox(k), given);
 			detectPointFace(*model2.getHitbox(i), *model1.getHitbox(k), given);
-			correctNormalsToPointRightDirection(model1, model2, given);
 			//for (int i = 0; i < given.size(); i++) {
 			//	std::cout << given[i].normal.x << " " << given[i].normal.y << " " << given[i].normal.z << "\n";
 			//}
@@ -599,6 +598,8 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 			//	std::cout << given[i].position.x << " " << given[i].position.y << " " << given[i].position.z << "\n";
 			//	std::cout << given[i].normal.x << " " << given[i].normal.y << " " << given[i].normal.z << "\n";
 			//}
+			correctNormalsToPointRightDirection(model1, model2, given);
+
 			detectEdgeEdge(*model1.getHitbox(i), *model2.getHitbox(k), given);
 
 			//std::cout << given.size() << "\n";
@@ -615,22 +616,24 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 
 void World::addImpulses(Model& model1, Model& model2, std::vector<Contact>& vec) {
 	for (int i = 0; i < vec.size(); i++) {
-		//glm::vec3 cm1ToCollision = *model1.getCm();
-		//glm::vec3 cm2ToCollision = *model2.getCm();
+		glm::vec3 cm1ToCollision = *model1.getCm();
+		glm::vec3 cm2ToCollision = *model2.getCm();
 		float bounceFactor = model1.getBounceFactor() * model2.getBounceFactor();
 		float frictionFactor = model1.getFrictionFactor() * model2.getFrictionFactor();
-
-		float scale = (glm::dot(model1.getVelocity() - model2.getVelocity(), vec[i].normal) + glm::dot(*model1.getAngularVelocity() - *model2.getAngularVelocity(), vec[i].normal)) * bounceFactor * 2.0f;
+		float scale = abs(glm::dot(model1.getVelocity() - model2.getVelocity(), vec[i].normal)/1.0f) * bounceFactor * 3.0f /(float)vec.size();
 		Impulse impOn2;
-		impOn2.direction = vec[i].normal * scale / (float)vec.size();
+		std::cout << scale << vec[i].normal.x << " " << vec[i].normal.y << " " << vec[i].normal.z <<"\n";
+		impOn2.direction = vec[i].normal * scale ;
 		impOn2.position = vec[i].position;
-
 		Impulse impOn1;
 		impOn1.direction = impOn2.direction * (-1.0f);
 		impOn1.position = vec[i].position;
-
 		model1.addImpulse(impOn1);
 		model2.addImpulse(impOn2);
+		//float e = model1.getBounceFactor() * model2.getBounceFactor();
+
+		//glm::vec3 J = (1.0f+e) * glm::dot((model1.getVelocity() - model2.getVelocity()), vec[i].normal)
+
 	}
 }
 

@@ -12,11 +12,11 @@
 
 Model::Model(std::string location) {
 	load(location, 1, false, glm::vec3(0, 0, 0));
-	setupModel();
+	setupModel(100);
 }
 
-void Model::setupModel() {
-	mass = 100;
+void Model::setupModel(float gmass) {
+	mass = gmass;
 	translation = glm::mat4(1);
 	velocity = glm::vec3(0, 0, 0);
 	angularVelocityDirection = glm::vec3(0, 0, 0);
@@ -40,6 +40,17 @@ void Model::setupModel() {
 	hitboxes.push_back(h);
 	bounceFactor = 0.5f;
 	frictionFactor = 0.5f;
+	for (int i = 0; i < hitboxVectors.size(); i++) {
+		float max, min;
+		this->getMaxMinFromProjection(hitboxVectors[i], max, min);
+		wallsDistance.push_back(max);
+		wallsDistance.push_back(min);
+	}
+
+	inertiaTensor = glm::mat4(1);
+	inertiaTensor[0][0] = mass / 12 * (pow(wallsDistance[2] - wallsDistance[3], 2) + (pow(wallsDistance[4] - wallsDistance[5], 2)));
+	inertiaTensor[1][1] = mass / 12 * (pow(wallsDistance[0] - wallsDistance[1], 2) + (pow(wallsDistance[4] - wallsDistance[5], 2)));
+	inertiaTensor[2][2] = mass / 12 * (pow(wallsDistance[0] - wallsDistance[1], 2) + (pow(wallsDistance[2] - wallsDistance[3], 2)));
 }
 
 
@@ -47,12 +58,12 @@ void Model::setupModel() {
 
 Model::Model(std::string location, float scale) {
 	load(location, scale, false, glm::vec3(0, 0, 0));
-	setupModel();
+	setupModel(100);
 }
 
 Model::Model(std::string location, glm::vec3 physLocation) {
 	load(location, 1, true, physLocation);
-	setupModel();
+	setupModel(100);
 }
 
 Model::Model(float length, float gheight, float gz, float gx) {
@@ -78,7 +89,7 @@ Model::Model(float length, float gheight, float gz, float gx) {
 
 Model::Model(std::string location, float scale, glm::vec3 physLocation) {
 	load(location, scale, true, physLocation);
-	setupModel();
+	setupModel(scale * 10);
 }
 
 
@@ -96,6 +107,9 @@ glm::mat4 Model::getTransformation() {
 	return glm::translate(glm::mat4(1), cm) * translation * glm::translate(glm::mat4(1), -originalCm);
 }
 
+//glm::mat4 Model::getInverseTransformation() {
+//	return glm::translate(glm::mat4(1), -cm) * 
+//}
 
 void Model::Draw(Camera cam) {
 	for (int i = 0; i < mesh.size(); i++) {
@@ -110,14 +124,15 @@ void Model::update(float deltaT) {
 	cm = cm + velocity * deltaT;
 
 	if (angularVelocityDirection.x != 0 || angularVelocityDirection.y != 0 || angularVelocityDirection.z != 0) {
-		translation = glm::rotate(translation, sqrt(MyMath::getVectorMagnitudeSquared(angularVelocityDirection) * deltaT), angularVelocityDirection);
+		translation = glm::rotate(translation, MyMath::getVectorMagnitude(angularVelocityDirection) * deltaT, angularVelocityDirection);
+		inverseTranslation = glm::inverse(translation);
 	}
 
 	if (MyMath::getVectorMagnitudeSquared(angularVelocityDirection) < 0.0000000001) {
 		angularVelocityDirection = glm::vec3(0);
 	}
 	else {
-		angularVelocityDirection = angularVelocityDirection * 0.99f * (1 - deltaT);
+		angularVelocityDirection = angularVelocityDirection * (float)pow(2.6, -deltaT);
 	}
 
 
@@ -484,18 +499,17 @@ glm::vec3* Model::getAngularVelocity() {
 
 void Model::dealWithImpulses() {
 	for (int i = 0; i < impulses.size(); i++) {
-		glm::vec3 cmToImpulse = impulses[i].position - cm;
-		cmToImpulse.x = cmToImpulse.x / distToCenter[0];
-		cmToImpulse.y = cmToImpulse.y / distToCenter[2];
-		cmToImpulse.z = cmToImpulse.z / distToCenter[4];
-
-		
-
-		cmToImpulse = glm::normalize(cmToImpulse);
-		velocity += glm::dot(cmToImpulse, glm::normalize( - impulses[i].direction)) * impulses[i].direction;
-		angularVelocityDirection += glm::cross(cmToImpulse, impulses[i].direction)/ 30.0f;
-
-
+		if (glm::length(impulses[i].direction) != 0) {
+			glm::vec3 cmToImpulse = impulses[i].position - cm;
+			cmToImpulse.x = cmToImpulse.x / distToCenter[0];
+			cmToImpulse.y = cmToImpulse.y / distToCenter[2];
+			cmToImpulse.z = cmToImpulse.z / distToCenter[4];
+			cmToImpulse = glm::normalize(cmToImpulse);
+			glm::vec3 velocityAddition = glm::dot(cmToImpulse, glm::normalize(-impulses[i].direction)) * impulses[i].direction;
+			std::cout << glm::length(velocityAddition) << " " << impulses.size() << " =======\n";
+			velocity += velocityAddition;
+			angularVelocityDirection += glm::cross(cmToImpulse, impulses[i].direction) / 7.0f;
+		}
 	}
 	impulses.clear();
 }

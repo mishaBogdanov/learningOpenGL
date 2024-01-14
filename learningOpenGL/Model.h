@@ -31,6 +31,9 @@ private:
 	std::vector<Mesh> mesh;
 	//glm::vec3 pos;
 	glm::mat4 translation;
+	glm::mat4 inverseTranslation;
+
+	glm::mat4 inertiaTensor;
 
 
 
@@ -41,6 +44,8 @@ private:
 	double angularVelocity;
 	std::vector<ShaderClass> shaders;
 	bool movable;
+	std::vector<float> wallsDistance;
+
 
 	std::vector<glm::vec3> corners;
 	std::vector<glm::vec3> originalCorners;
@@ -60,7 +65,7 @@ private:
 	float mass;
 	float frictionFactor;
 
-	void setupModel();
+	void setupModel(float mass);
 	void setupCybertruck(float scale);
 	bool load(std::string opening, float scale, bool customLocation, glm::vec3 newLocation);
 
@@ -77,6 +82,8 @@ public:
 	void Draw(ShaderClass& shader, ShaderClass& shader2, Camera cam);
 	void Draw(Camera cam);
 	glm::mat4 getTransformation();
+	glm::mat4 getInverseTransformation();
+
 
 	void update(float deltaT);
 	void setVelocity(glm::vec3 &givenV);
