@@ -30,6 +30,9 @@ private:
 	glm::vec3 cm = glm::vec3(0);
 	glm::vec3 translatedCm;
 	int type; //for future implementation in case I need wheels, body, etc.
+
+	void getMaxMinFromProjectionFromCm(glm::vec3& projectVec, float& max, float& min);
+
 public:
 	Hitbox(std::vector<glm::vec3> given, std::vector<glm::vec3> gNormals, Model * model, std::vector<int> edges);
 	void update(glm::mat4 *givenMatrix, glm::mat4 * givenRotation);
@@ -46,5 +49,7 @@ public:
 	void getMaxMin(int i, float givenCm, float& max, float& min);
 	int getEdgeNumber();
 	void getEdge(int i, glm::vec3& g1, glm::vec3& g2);
+	Model* getParent();
+
 };
 

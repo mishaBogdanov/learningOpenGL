@@ -3,21 +3,22 @@
 #include "Mesh.h"
 #include <iostream>
 #include <cstdio>
-#include <glm/ext/matrix_transform.hpp>
 #include "MyMath.h"
-
+#include "vectorPrintingClass.h"
 
 
 
 
 Model::Model(std::string location) {
-	load(location, 1, false, glm::vec3(0, 0, 0));
+	load(location, 1, false, glm::vec3(0, 0, 0), 1);
 	setupModel(100);
 }
 
 void Model::setupModel(float gmass) {
+	up = glm::vec3(0, 1, 0);
 	mass = gmass;
 	translation = glm::mat4(1);
+	inverseTranslation = glm::mat4(1);
 	velocity = glm::vec3(0, 0, 0);
 	angularVelocityDirection = glm::vec3(0, 0, 0);
 	angularVelocity = 0;
@@ -30,67 +31,113 @@ void Model::setupModel(float gmass) {
 		shaders[k].Activate();
 		glUniformMatrix4fv(glGetUniformLocation(shaders[k].ID, "positionMatrix"), 1, GL_FALSE, glm::value_ptr(getTransformation()));
 	}
-	hitboxVectors.push_back(glm::vec3(1, 0, 0));
-	hitboxVectors.push_back(glm::vec3(0, 1, 0));
-	hitboxVectors.push_back(glm::vec3(0, 0, 1));
-	movable = true;
-	std::vector<int> edges = { 0,1,2,3,4,5,6,7,0,4,0,2,1,5,1,3,2,6,3,7,4,6,5,7 };
 
-	Hitbox h = Hitbox(originalCorners, hitboxVectors, this, edges);
-	hitboxes.push_back(h);
-	bounceFactor = 0.5f;
-	frictionFactor = 0.5f;
-	for (int i = 0; i < hitboxVectors.size(); i++) {
-		float max, min;
-		this->getMaxMinFromProjection(hitboxVectors[i], max, min);
-		wallsDistance.push_back(max);
-		wallsDistance.push_back(min);
+
+	movable = true;
+	
+
+	bounceFactor = 0.3f;
+	frictionFactor = 0.7f;
+	glm::vec3 negCm = originalCm * (-1.0f);
+	glm::vec3 originalCmSet = originalCm;
+	moveBy(negCm);
+
+	moveBy(originalCmSet);
+
+	for (int i = 0; i < distToCenter.size(); i+=2) {
+		//std::cout << distToCenter[i] << " " << distToCenter[i + 1] << "\n";
+		float average = distToCenter[i] - distToCenter[i + 1];
+		distToCenter[i] = average / 2;
+		distToCenter[i + 1] = average / (-2);
+		
 	}
 
-	inertiaTensor = glm::mat4(1);
-	inertiaTensor[0][0] = mass / 12 * (pow(wallsDistance[2] - wallsDistance[3], 2) + (pow(wallsDistance[4] - wallsDistance[5], 2)));
-	inertiaTensor[1][1] = mass / 12 * (pow(wallsDistance[0] - wallsDistance[1], 2) + (pow(wallsDistance[4] - wallsDistance[5], 2)));
-	inertiaTensor[2][2] = mass / 12 * (pow(wallsDistance[0] - wallsDistance[1], 2) + (pow(wallsDistance[2] - wallsDistance[3], 2)));
+
+	inertiaTensor = glm::mat3(1);
+
+	inertiaTensor[0][0] = mass / 12 * (pow(distToCenter[2] - distToCenter[3], 2) + (pow(distToCenter[4] - distToCenter[5], 2)));
+	//std::cout << "got here \n";
+
+	inertiaTensor[1][1] = mass / 12 * (pow(distToCenter[0] - distToCenter[1], 2) + (pow(distToCenter[4] - distToCenter[5], 2)));
+	inertiaTensor[2][2] = mass / 12 * (pow(distToCenter[0] - distToCenter[1], 2) + (pow(distToCenter[2] - distToCenter[3], 2)));
+	inverseInertiaTensor = glm::inverse(inertiaTensor);
+
+
+}
+
+
+void Model::setupHitbox() {
+	mass = 100;
+	translation = glm::mat4(1);
+	inverseTranslation = glm::mat4(1);
+
+	velocity = glm::vec3(0, 0, 0);
+	angularVelocityDirection = glm::vec3(0, 0, 0);
+	angularVelocity = 0;
+	facing = glm::vec3(0, 0, 1);
+
+	movable = false;
+
+
+	bounceFactor = 0.7f;
+	frictionFactor = 0.7f;
+
 }
 
 
 
 
 Model::Model(std::string location, float scale) {
-	load(location, scale, false, glm::vec3(0, 0, 0));
+	load(location, scale, false, glm::vec3(0, 0, 0), 1);
 	setupModel(100);
 }
 
 Model::Model(std::string location, glm::vec3 physLocation) {
-	load(location, 1, true, physLocation);
+	load(location, 1, true, physLocation, 1);
 	setupModel(100);
 }
 
-Model::Model(float length, float gheight, float gz, float gx) {
-	angularVelocity = 0;
-	angularVelocityDirection = glm::vec3(0);
-	cm = glm::vec3(gx, gheight, gz);
-	facing = glm::vec3(0, 1, 0);
-	mass = 100;
-	originalCm = cm;
-	translation = glm::mat4(1);
-	up = glm::vec3(0, 1, 0);
-	velocity = glm::vec3(0, 0, 0);
-	hitboxVectors.push_back(glm::vec3(0, 1, 0));
-	corners.push_back(glm::vec3(gx - length / 2, gheight, gz - length / 2));
-	corners.push_back(glm::vec3(gx - length / 2, gheight, gz + length / 2));
-	corners.push_back(glm::vec3(gx + length / 2, gheight, gz - length / 2));
-	corners.push_back(glm::vec3(gx + length / 2, gheight, gz + length / 2));
+//Model::Model(float length, float gheight, float gz, float gx) {
+//	angularVelocity = 0;
+//	angularVelocityDirection = glm::vec3(0);
+//	cm = glm::vec3(gx, gheight, gz);
+//	facing = glm::vec3(0, 1, 0);
+//	mass = 100;
+//	originalCm = cm;
+//	translation = glm::mat4(1);
+//	up = glm::vec3(0, 1, 0);
+//	velocity = glm::vec3(0, 0, 0);
+//	hitboxVectors.push_back(glm::vec3(0, 1, 0));
+//	corners.push_back(glm::vec3(gx - length / 2, gheight, gz - length / 2));
+//	corners.push_back(glm::vec3(gx - length / 2, gheight, gz + length / 2));
+//	corners.push_back(glm::vec3(gx + length / 2, gheight, gz - length / 2));
+//	corners.push_back(glm::vec3(gx + length / 2, gheight, gz + length / 2));
+//
+//
+//	movable = false;
+//}
 
 
-	movable = false;
+Model::Model(std::string location, float scale, glm::vec3 physLocation, int hitbox) {
+
+	if (hitbox == 2) {
+		loadHitbox(location, scale, physLocation);
+		setupHitbox();
+	}
+	else if (hitbox == 1) {
+
+		load(location, scale, true, physLocation, true);
+
+		setupModel(scale * scale * scale * 2);
+
+	}
+	else if (hitbox == 3) {
+		load(location, scale, true, physLocation, false);
+		setupModel(scale * scale * scale * 2);
+	}
+
 }
 
-
-Model::Model(std::string location, float scale, glm::vec3 physLocation) {
-	load(location, scale, true, physLocation);
-	setupModel(scale * 10);
-}
 
 
 
@@ -122,10 +169,24 @@ void Model::Draw(Camera cam) {
 
 void Model::update(float deltaT) {
 	cm = cm + velocity * deltaT;
-
+	//vpc::printVec(cm);
+	
 	if (angularVelocityDirection.x != 0 || angularVelocityDirection.y != 0 || angularVelocityDirection.z != 0) {
-		translation = glm::rotate(translation, MyMath::getVectorMagnitude(angularVelocityDirection) * deltaT, angularVelocityDirection);
+		glm::mat4 t = glm::rotate(glm::mat4(1), MyMath::getVectorMagnitude(angularVelocityDirection) * deltaT, angularVelocityDirection);
+		translation = t * translation;
 		inverseTranslation = glm::inverse(translation);
+	}
+
+	if (wantedSteeringPos != currentSteeringPosition) {
+		if (currentSteeringPosition > wantedSteeringPos) {
+			currentSteeringPosition = max(currentSteeringPosition - deltaT * steeringRate, wantedSteeringPos);
+		}
+		else {
+			currentSteeringPosition = min(currentSteeringPosition + deltaT * steeringRate, wantedSteeringPos);
+		}
+	}
+	if (currentSteeringPosition != 0) {
+		driveRotate(currentSteeringPosition, deltaT);
 	}
 
 	if (MyMath::getVectorMagnitudeSquared(angularVelocityDirection) < 0.0000000001) {
@@ -139,6 +200,14 @@ void Model::update(float deltaT) {
 	//for (int i = 0; i < corners.size(); i++) {
 	//	corners[i] = getTransformation() * glm::vec4(originalCorners[i], 1);
 	//}
+	vDueToForce = glm::vec3(0);
+	for (int i = 0; i < forces.size(); i++){
+		vDueToForce += forces[i];
+	}
+	vDueToForce = vDueToForce * deltaT / mass;
+	velocity += vDueToForce;
+
+
 	for (int i = 0; i < hitboxes.size(); i++) {
 		glm::mat4 full = getTransformation();
 		hitboxes[i].update(&full, &translation);
@@ -155,17 +224,25 @@ void Model::setVelocity(glm::vec3& v) {
 	velocity = v;
 }
 
+void Model::setAngularVelocity(glm::vec3& v) {
+	angularVelocityDirection = v;
+}
+
 void Model::scaleVelocity(float g) {
 	velocity *= g;
 }
 
-std::vector<glm::vec3> Model::getHitboxVectors() {
-	std::vector<glm::vec3> returning;
-	for (int i = 0; i < hitboxVectors.size(); i++) {
-		returning.push_back(translation * glm::vec4(hitboxVectors[i], 1));
-	}
-	return returning;
+void Model::setPosition(glm::vec3 given) {
+	cm = given;
 }
+
+//std::vector<glm::vec3> Model::getHitboxVectors() {
+//	std::vector<glm::vec3> returning;
+//	for (int i = 0; i < hitboxVectors.size(); i++) {
+//		returning.push_back(translation * glm::vec4(hitboxVectors[i], 1));
+//	}
+//	return returning;
+//}
 
 void Model::getHitboxes(Hitbox*& firstHitbox, int& size) {
 	firstHitbox = &hitboxes[0];
@@ -176,35 +253,35 @@ int Model::getHitboxesSize() {
 	return hitboxes.size();
 }
 
-void Model::getHitboxCorners(std::vector<glm::vec3>& returning) {
-	for (int i = 0; i < corners.size(); i++) {
-		returning.push_back(corners[i]);
-	}
-}
+//void Model::getHitboxCorners(std::vector<glm::vec3>& returning) {
+//	for (int i = 0; i < corners.size(); i++) {
+//		returning.push_back(corners[i]);
+//	}
+//}
 
-void Model::getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& min) {
-	bool isFirst = true;
-	for (int i = 0; i < corners.size(); i++) {
-		glm::vec3 val;
-		MyMath::projection(projectVec, corners[i], val);
-		float square = MyMath::getVecMultiple(projectVec, val);
-		if (isFirst) {
-			max = square;
-			min = square;
-			isFirst = false;
-		}
-		else if (square > max) {
-			max = square;
-		}
-		else if (square < min) {
-			min = square;
-		}
-	}
-}
+//void Model::getMaxMinFromProjection(glm::vec3& projectVec, float& max, float& min) {
+//	bool isFirst = true;
+//	for (int i = 0; i < corners.size(); i++) {
+//		glm::vec3 val;
+//		MyMath::projection(projectVec, corners[i], val);
+//		float square = MyMath::getVecMultiple(projectVec, val);
+//		if (isFirst) {
+//			max = square;
+//			min = square;
+//			isFirst = false;
+//		}
+//		else if (square > max) {
+//			max = square;
+//		}
+//		else if (square < min) {
+//			min = square;
+//		}
+//	}
+//}
 
 
 
-bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 newLocation) {
+bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 newLocation, bool addHitbox) {
 
 
 	std::ifstream file(given);
@@ -294,22 +371,6 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		mesh.push_back(Mesh(Vertices, Indices));
 		Vertices.clear();
 		Indices.clear();
-		//maxDistFromCm = sqrt(PosX * PosX + PosY * PosY + PosZ * PosZ);
-		//if (sqrt(PosX * PosX + PosY * PosY + NegZ * NegZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(PosX * PosX + PosY * PosY + NegZ * NegZ);
-		//}if (sqrt(PosX * PosX + NegY * NegY + PosZ * PosZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(PosX * PosX + NegY * NegY + PosZ * PosZ);
-		//}if (sqrt(PosX * PosX + NegY * NegY + NegZ * NegZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(PosX * PosX + NegY * NegY + NegZ * NegZ);
-		//}if (sqrt(PosX * PosX + PosY * PosY + PosZ * PosZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(NegX*NegX + PosY * PosY + PosZ * PosZ);
-		//}if (sqrt(NegX * NegX + PosY * PosY + NegZ * NegZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(NegX * NegX + PosY * PosY + NegZ * NegZ);
-		//}if (sqrt(NegX * NegX + NegY * NegY + PosZ * PosZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(NegX * NegX + NegY * NegY + PosZ * PosZ);
-		//}if (sqrt(NegX * NegX + NegY * NegY + NegZ * NegZ) > maxDistFromCm) {
-		//	maxDistFromCm = sqrt(NegX * NegX + NegY * NegY + NegZ * NegZ);
-		//}
 		distToCenter.push_back(PosX);
 		distToCenter.push_back(NegX);
 		distToCenter.push_back(PosY);
@@ -317,6 +378,8 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		distToCenter.push_back(PosZ);
 		distToCenter.push_back(NegZ);
 
+
+		std::vector < glm::vec3> originalCorners;
 
 		originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
 		originalCorners.push_back(glm::vec3(PosX, PosY, NegZ));
@@ -326,18 +389,32 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 		originalCorners.push_back(glm::vec3(NegX, PosY, NegZ));
 		originalCorners.push_back(glm::vec3(NegX, NegY, PosZ));
 		originalCorners.push_back(glm::vec3(NegX, NegY, NegZ));
-		for (int i = 0; i < originalCorners.size(); i++) {
-			corners.push_back(originalCorners[i]);
+
+		if (addHitbox) {
+
+			//for (int i = 0; i < originalCorners.size(); i++) {
+			//	corners.push_back(originalCorners[i]);
+			//}
+
+
+			std::vector<glm::vec3> hitboxVectors;
+			hitboxVectors.push_back(glm::vec3(1, 0, 0));
+			hitboxVectors.push_back(glm::vec3(0, 1, 0));
+			hitboxVectors.push_back(glm::vec3(0, 0, 1));
+
+			std::vector<int> edges = { 0,1,2,3,4,5,6,7,0,4,0,2,1,5,1,3,2,6,3,7,4,6,5,7 };
+			Hitbox h = Hitbox(originalCorners, hitboxVectors, this, edges);
+			hitboxes.push_back(h);
 		}
 
 
 
 
-		glm::vec3 currentSum = corners[0];
-		for (int i = 1; i < corners.size(); i++) {
-			currentSum += corners[i];
+		glm::vec3 currentSum = originalCorners[0];
+		for (int i = 1; i < originalCorners.size(); i++) {
+			currentSum += originalCorners[i];
 		}
-		cm = currentSum / (float)corners.size();
+		cm = currentSum / (float)originalCorners.size();
 		originalCm = cm;
 		if (customLocation) {
 			cm = newLocation;
@@ -352,11 +429,146 @@ bool Model::load(std::string given, float scale, bool customLocation, glm::vec3 
 	return 0;
 }
 
+bool Model::loadHitbox(std::string given, float scale, glm::vec3 newLocation) {
+
+
+	std::ifstream file(given);
+
+	float PosX, PosY, PosZ, NegX, NegY, NegZ
+		, PosXTotal, PosYTotal, PosZTotal, NegXTotal, NegYTotal, NegZTotal;
+
+	bool isFirst = true;
+	bool shouldScan = true;
+
+
+	if (file.is_open()) {
+		std::istream_iterator<std::string> fileIterator(file);
+		std::istream_iterator<std::string> endIterator;
+
+		while (fileIterator != endIterator) {
+			if ((*fileIterator) == "v") {
+
+				++fileIterator;
+				float val1 = std::stof((*fileIterator)) * scale;
+				++fileIterator;
+				float val2 = std::stof((*fileIterator)) * scale;
+				++fileIterator;
+				float val3 = std::stof((*fileIterator)) * scale;
+				if (shouldScan) {
+					PosX = val1;
+					NegX = val1;
+					PosY = val2;
+					NegY = val2;
+					PosZ = val3;
+					NegZ = val3;
+					shouldScan = false;
+				}
+				if (isFirst) {
+					PosXTotal = val1;
+					NegXTotal = val1;
+					PosYTotal = val2;
+					NegYTotal = val2;
+					PosZTotal = val3;
+					NegZTotal = val3;
+					isFirst = false;
+				}
+				if (val1 > PosX) {
+					PosX = val1;
+				}
+				if (val2 > PosY) {
+					PosY = val2;
+				}
+				if (val3 > PosZ) {
+					PosZ = val3;
+				}
+				if (val1 < NegX) {
+					NegX = val1;
+				}
+				if (val2 < NegY) {
+					NegY = val2;
+				}
+				if (val3 < NegZ) {
+					NegZ = val3;
+				}
+
+				if (val1 > PosXTotal) {
+					PosXTotal = val1;
+				}
+				if (val2 > PosYTotal) {
+					PosYTotal = val2;
+				}
+				if (val3 > PosZTotal) {
+					PosZTotal = val3;
+				}
+				if (val1 < NegXTotal) {
+					NegXTotal = val1;
+				}
+				if (val2 < NegYTotal) {
+					NegYTotal = val2;
+				}
+				if (val3 < NegZTotal) {
+					NegZTotal = val3;
+				}
+			}
+			else if ((*fileIterator) == "o") {
+				createHitbox(PosX, PosY, PosZ, NegX, NegY, NegZ);
+				shouldScan = true;
+			}
+
+
+
+
+			++fileIterator;
+
+		}
+		createHitbox(PosX, PosY, PosZ, NegX, NegY, NegZ);
+
+		cm = glm::vec3((PosXTotal + NegXTotal) / 2.0f, (PosYTotal + NegYTotal) / 2.0f, (PosZTotal + NegZTotal) / 2.0f);
+		originalCm = cm;
+
+		cm = newLocation;
+
+
+
+		file.close();
+
+
+	}
+	return 0;
+}
+
+void Model::createHitbox(float PosX, float PosY, float PosZ, float NegX, float NegY, float NegZ) {
+	std::vector < glm::vec3> originalCorners;
+
+	originalCorners.push_back(glm::vec3(PosX, PosY, PosZ));
+	originalCorners.push_back(glm::vec3(PosX, PosY, NegZ));
+	originalCorners.push_back(glm::vec3(PosX, NegY, PosZ));
+	originalCorners.push_back(glm::vec3(PosX, NegY, NegZ));
+	originalCorners.push_back(glm::vec3(NegX, PosY, PosZ));
+	originalCorners.push_back(glm::vec3(NegX, PosY, NegZ));
+	originalCorners.push_back(glm::vec3(NegX, NegY, PosZ));
+	originalCorners.push_back(glm::vec3(NegX, NegY, NegZ));
+	//for (int i = 0; i < originalCorners.size(); i++) {
+	//	corners.push_back(originalCorners[i]);
+	//}
+
+
+	std::vector<glm::vec3> hitboxVectors;
+	hitboxVectors.push_back(glm::vec3(1, 0, 0));
+	hitboxVectors.push_back(glm::vec3(0, 1, 0));
+	hitboxVectors.push_back(glm::vec3(0, 0, 1));
+
+	std::vector<int> edges = { 0,1,2,3,4,5,6,7,0,4,0,2,1,5,1,3,2,6,3,7,4,6,5,7 };
+	Hitbox h = Hitbox(originalCorners, hitboxVectors, this, edges);
+	hitboxes.push_back(h);
+}
+
 
 void Model::rotate(float angle, glm::vec3& norm) {
 	glm::mat4 rot = glm::mat4(1);
 	rot = glm::rotate(rot, glm::radians(angle), norm);
 	translation = rot * translation;
+	inverseTranslation = glm::inverse(translation);
 }
 
 void Model::moveBy(glm::vec3& given) {
@@ -388,7 +600,7 @@ void Model::addVelocity(glm::vec3& given) {
 }
 
 glm::vec3 Model::getFacing() {
-	return glm::vec4(facing, 1) * getTransformation();
+	return  translation * glm::vec4(facing, 1);
 }
 
 bool Model::isMovable() {
@@ -498,18 +710,155 @@ glm::vec3* Model::getAngularVelocity() {
 }
 
 void Model::dealWithImpulses() {
+	glm::vec3 vUpdate = glm::vec3(0);
+	glm::vec3 aVUpdate = glm::vec3(0);
+	bool initialize = false;
+	frictionShouldApply = false;
 	for (int i = 0; i < impulses.size(); i++) {
 		if (glm::length(impulses[i].direction) != 0) {
+			initialize = true;
 			glm::vec3 cmToImpulse = impulses[i].position - cm;
-			cmToImpulse.x = cmToImpulse.x / distToCenter[0];
-			cmToImpulse.y = cmToImpulse.y / distToCenter[2];
-			cmToImpulse.z = cmToImpulse.z / distToCenter[4];
-			cmToImpulse = glm::normalize(cmToImpulse);
-			glm::vec3 velocityAddition = glm::dot(cmToImpulse, glm::normalize(-impulses[i].direction)) * impulses[i].direction;
-			std::cout << glm::length(velocityAddition) << " " << impulses.size() << " =======\n";
-			velocity += velocityAddition;
-			angularVelocityDirection += glm::cross(cmToImpulse, impulses[i].direction) / 7.0f;
+
+			glm::vec3 cmToCmImpulseTranslated = inverseTranslation * glm::vec4(cmToImpulse, 1.0f);
+			glm::vec3 translatedImpulse = inverseTranslation * glm::vec4(impulses[i].direction, 1.0f);
+			glm::vec3 changeInAngular = inverseInertiaTensor * glm::cross(cmToCmImpulseTranslated, translatedImpulse);
+			glm::vec3 changeInAngularInOriginal = translation * glm::vec4(changeInAngular, 1.0f);
+
+			vUpdate += impulses[i].direction / mass;
+			aVUpdate += changeInAngularInOriginal * 1.0f;
 		}
 	}
+	if (initialize) {
+		if (MyMath::getVectorMagnitudeSquared(vUpdate) > 0.75 || MyMath::getVectorMagnitudeSquared(velocity)>0.9 || 
+			MyMath::getVectorMagnitudeSquared(aVUpdate) > 0.0001 || MyMath::getVectorMagnitudeSquared(angularVelocityDirection) > 0.01) {
+			velocity += vUpdate;
+			frictionShouldApply = true;
+			angularVelocityDirection += aVUpdate;
+
+		}
+		else {
+			velocity = glm::vec3(0);
+			angularVelocityDirection = glm::vec3(0);
+		}
+	}
+	
 	impulses.clear();
 }
+
+
+void Model::setMass(float gMass) {
+	for (int i = 0; i < forces.size(); i++) {
+		forces[i] = forces[i] / mass * gMass;
+	}
+	mass = gMass;
+}
+
+void Model::accelerateForward(float ammount, float deltaT) {
+	velocity += glm::normalize(getFacing()) * ammount * deltaT;
+}
+
+void Model::driveRotate(float degrees, float deltaT) {
+	rotate(-degrees * glm::length(velocity) * deltaT/ 7, up);
+	velocity = glm::rotate(velocity, glm::radians(-degrees * glm::length(velocity) * deltaT/7), up);
+}
+
+bool Model::impulsesEmpty() {
+	return impulses.size() == 0;
+}
+
+
+glm::vec3 Model::applyInverseInertiaTensor(glm::vec3 cmToImpact, glm::vec3 normal) {
+	//glm::vec3 impactToCm = pos - cm;
+	glm::vec3 inOriginalCoordinates = inverseTranslation * glm::vec4(cmToImpact, 1.0f);
+	glm::vec3 translatedNormal = inverseTranslation * glm::vec4(normal, 1.0f);
+	glm::vec3 tensored = inverseInertiaTensor * glm::cross(inOriginalCoordinates, translatedNormal);
+	glm::vec3 tensoerdInOriginal = translation * glm::vec4(tensored, 1.0f);
+	return tensoerdInOriginal;
+}
+
+glm::mat4 Model::getInverseTransformation() {
+	return inverseTranslation;
+}
+
+glm::mat4* Model::getRawTransformation() {
+	return &translation;
+}
+
+void Model::addDebugger(Model * given) {
+	debugger.push_back(given);
+}
+
+glm::vec3 Model::velocityAtPoint(glm::vec3& atPoint) {
+	return velocity + glm::cross(angularVelocityDirection, atPoint - cm);
+}
+
+void Model::addForce(glm::vec3 force) {
+	forces.push_back(force);
+}
+
+glm::vec3 Model::getForces() {
+	glm::vec3 force = glm::vec3(0);
+	for (int i = 0; i < forces.size(); i++) {
+		force += forces[i];
+	}
+	return force;
+}
+
+void Model::setCurrentlyDriving(bool given) {
+	currentlyDriving = given;
+	//if (given) {
+	//	frictionFactor = 0.7;
+
+	//}
+	//else {
+	//	0.7;
+	//}
+}
+
+bool Model::getCurrentlyDriving() {
+	return currentlyDriving;
+}
+
+void Model::setWantedRotation(float wanted) {
+	wantedSteeringPos = wanted;
+}
+
+void Model::addFrictionForce(Friction gImp) {
+	frictions.push_back(gImp);
+}
+
+void Model::dealWithFrictionForce() {
+	if (frictionShouldApply) {
+		for (int i = 0; i < frictions.size(); i++) {
+			if (glm::length(frictions[i].value) != 0) {
+				glm::vec3 cmToImpulse = frictions[i].position - cm;
+
+				glm::vec3 cmToCmImpulseTranslated = inverseTranslation * glm::vec4(cmToImpulse, 1.0f);
+				glm::vec3 translatedImpulse = inverseTranslation * glm::vec4(frictions[i].value, 1.0f);
+				glm::vec3 changeInAngular = inverseInertiaTensor * glm::cross(cmToCmImpulseTranslated, translatedImpulse);
+				glm::vec3 changeInAngularInOriginal = translation * glm::vec4(changeInAngular, 1.0f);
+
+				glm::vec3 newV = velocity + frictions[i].value / mass;
+				glm::vec3 newAV = angularVelocityDirection + changeInAngularInOriginal;
+
+				if (glm::dot(newV + glm::cross(newAV, cmToImpulse), frictions[i].value) > 0 && !frictions[i].otherModel->isMoving()) {
+					//std::cout << "@@@";
+				}
+				else {
+					//std::cout << "!!!";
+					velocity = newV;
+					angularVelocityDirection = newAV;
+				}
+			}
+		}
+	}
+	frictions.clear();
+}
+
+bool Model::isMoving() {
+	return MyMath::getVectorMagnitudeSquared(velocity) > 0.5; //friction !!!
+}
+
+
+
+

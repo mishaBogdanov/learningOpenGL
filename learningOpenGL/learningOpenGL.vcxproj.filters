@@ -22,6 +22,9 @@
     <Filter Include="Resource Files\models">
       <UniqueIdentifier>{e3a493a9-f0a5-4915-be89-5db65bf3f624}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Worlds">
+      <UniqueIdentifier>{94d5d18e-0595-4734-924f-af704e5d0d8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="learningOpenGL.cpp">
@@ -78,6 +81,33 @@
     <ClCompile Include="Hitbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vectorPrintingClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TowerOfBoxes.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="floatingCollisions.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="Simple2BoxCollision.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="RoomWorld.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="rawTesla.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="Dust2Map.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="DominoesWorld.cpp">
+      <Filter>Worlds</Filter>
+    </ClCompile>
+    <ClCompile Include="AIdrive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ExperimentingWithShaders.h">
@@ -123,6 +153,33 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Hitbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vectorPrintingClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TowerOfBoxes.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="floatingCollisions.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="Simple2BoxCollision.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="RoomWorld.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="rawTesla.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="Dust2Map.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="DominoesWorld.h">
+      <Filter>Worlds</Filter>
+    </ClInclude>
+    <ClInclude Include="AIdrive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -177,10 +234,24 @@
     <None Include="BasicCube.object">
       <Filter>Resource Files\models</Filter>
     </None>
+    <None Include="Dust2Raw.object">
+      <Filter>Resource Files\models</Filter>
+    </None>
+    <None Include="Dust2Hitbox.object">
+      <Filter>Resource Files\models</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="learningOpenGL.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="simpleBox.object">
+      <Filter>Resource Files\models</Filter>
+    </Text>
+    <Text Include="Domino.object">
+      <Filter>Resource Files\models</Filter>
+    </Text>
   </ItemGroup>
 </Project>

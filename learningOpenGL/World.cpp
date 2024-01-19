@@ -5,6 +5,7 @@
 #include "MyMath.h"
 #include "Model.h"
 #include "Hitbox.h"
+#include "vectorPrintingClass.h"
 #include <map>
 
 
@@ -12,11 +13,12 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-World::World(float distX, float distY, float distZ, int divs) {
+World::World(float distX, float distY, float distZ, int divs, bool gravity) {
 	sizeX = distX;
 	sizeY = distY;
 	sizeZ = distZ;
 	divisions = divs;
+	gravityEnabled = gravity;
 }
 
 void World::setupGLFW() {
@@ -37,6 +39,8 @@ void World::setupGLFW() {
 	//if (isConsole) {
 	//	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	//}
+
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
@@ -77,14 +81,38 @@ void World::addModel(std::string given, float scale) {
 	models.push_back(Model(given, scale));
 }
 
+void World::addHitbox(std::string given, float scale, glm::vec3 location) {
+	Model m = Model(given, scale, location, 2);
+	models.push_back(m);
+}
 
-void World::addModel(std::string given, float scale, glm::vec3 pos) {
-	models.push_back(Model(given, scale, pos));
+
+void World::addModel(std::string given, float scale, glm::vec3 pos, bool hitbox, bool movable) {
+
+	Model m = Model(given, scale, pos, hitbox ? 1: 3);
+
+	if (movable && gravityEnabled) {
+		m.addForce(gravityAcceleration * m.getMass());
+	}
+	else if(!movable) {
+		m.changeIsMovable(false);
+	}
+	models.push_back(m);
 }
 
 void World::setVelocity(int location, glm::vec3 v) {
 	models[location].setVelocity(v);
 }
+
+void World::setAngularVelocity(int location, glm::vec3 v) {
+	models[location].setAngularVelocity(v);
+}
+
+void World::setMass(int index, float mass) {
+	models[index].setMass(mass);
+}
+
+
 
 
 void World::rotateModel(int location, float angle, glm::vec3& norm) {
@@ -155,23 +183,66 @@ void World::clearScreen() {
 
 
 void World::processInput() {
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !isDriving && !pushed) {
+
+	cam.Inputs(window);
+	if (GetKeyState('R') & 0x8000) {
+		gravityEnabled = true;
+	}
+	if (GetKeyState('Q') & 0x8000) {
+		glfwSetWindowShouldClose(window, true);
+
+	}
+
+	if (GetKeyState('E') & 0x8000 && !isDriving && !pushed) {
 		isDriving = true;
 		pushed = true;
-		drivable = &models[0];
+		drivable = &models[2];
+		drivable->setCurrentlyDriving(true);
+		cam.setIsDriving(true);
 	}
-	else if ((glfwGetKey(window, GLFW_KEY_E) != GLFW_PRESS && pushed)) {
+	else if ((!(GetKeyState('E') & 0x8000) && pushed)) {
 		pushed = false;
 	}
+
+
 	else if (!isDriving) {
-		cam.Inputs(window);
 	}
+
+
+
 	else {
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && !pushed) {
+		if (GetKeyState('E') & 0x8000 && !pushed) {
 			isDriving = false;
 			pushed = true;
+			drivable->setCurrentlyDriving(false);
+			cam.setIsDriving(false);
 		}
-		cam.setView(window, (*(*drivable).getCm()) - (*drivable).getFacing() * 50.0f + glm::vec3(0, 20, 0), (*(*drivable).getCm()));
+		if (GetKeyState(VK_UP) & 0x8000) {
+			drivable->accelerateForward(60.0, deltaT);
+		}
+
+		if (GetKeyState(VK_RIGHT) & 0x8000) {
+			drivable->setWantedRotation(4.0);
+		}else if (GetKeyState(VK_LEFT) & 0x8000) {
+			drivable->setWantedRotation(-4.0);
+		}
+		else {
+			drivable->setWantedRotation(0.0);
+		}
+
+		if (GetKeyState(VK_DOWN) & 0x8000) {
+			drivable->accelerateForward(-80.0, deltaT);
+
+		}
+
+		if (GetKeyState('R') & 0x8000) {
+			glm::vec3 v = glm::vec3(0);
+			drivable->setVelocity(v);
+
+		}
+		cam.setVehichleCamera(*drivable->getRawTransformation(), *drivable->getCm(), window);
+		
+		//(window, (*(*drivable).getCm()) - (*drivable).getFacing() * 50.0f + glm::vec3(0, 30, 0), (*(*drivable).getCm()));
 	}
 }
 
@@ -270,24 +341,6 @@ void World::detectCollisions() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void World::startRenderLoop() {
 
 	while (!glfwWindowShouldClose(window))
@@ -309,10 +362,15 @@ void World::startRenderLoop() {
 		//glBindTexture(GL_TEXTURE_2D, texture);
 
 
-		cam.setMatrix(90.0f, 0.1f, 300.0f);
+		cam.setMatrix(90.0f, 3.0f, 800.0f);
+
 		update();
 		detectCollisions();
 		dealWithCollisions();
+
+		applyDealWithImpulses();
+		applyDrag(deltaT);
+
 		//detectPointFace(*models[0].getHitbox(0), *models[1].getHitbox(0));
 		//detectPointFace(*models[1].getHitbox(0), *models[0].getHitbox(0));
 		//detectEdgeEdge(*models[1].getHitbox(0), *models[0].getHitbox(0));
@@ -339,32 +397,58 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
+void World::applyDrag(float dt) {
+	for (int i = 0; i < models.size(); i++) {
+		if (models[i].isMovable()) {
+			models[i].scaleVelocity(pow(dragConstant, -dt));
+		}
+	}
+}
 
 
 bool World::checkHitboxes(Model& model1, Model& model2, IntersectionModel& given) {
-	float curDistance = -1.0f;
+	//float curDistance = 0;
+	bool collidingWhole = false;
+	bool isFirst = true;
+	given.solutionVec = glm::vec3(0);
 	for (int i = 0; i < model1.getHitboxesSize(); i++) {
 		for (int k = 0; k < model2.getHitboxesSize(); k++) {
 
 			float intersectionDistance = -1.0f;
 			glm::vec3 normalCollision = glm::vec3(0);
 			bool colliding = checkHitboxesColliding((*model1.getHitbox(i)), (*model2.getHitbox(k)), intersectionDistance, normalCollision);
-			if (colliding && intersectionDistance > curDistance) {
+			if (isFirst && colliding) {
+				//curDistance = intersectionDistance;
+				given.solutionVec = normalCollision * intersectionDistance;
+				isFirst = false;
+			}
+			if (colliding) {
+				if (abs(given.solutionVec.x ) <= abs(normalCollision.x * intersectionDistance)) {
+					given.solutionVec.x = normalCollision.x * intersectionDistance;
+				}
+				if (abs(given.solutionVec.y) <= abs(normalCollision.y * intersectionDistance)) {
+					given.solutionVec.y = normalCollision.y * intersectionDistance;
+				}
+				if (abs(given.solutionVec.z) <= abs(normalCollision.z * intersectionDistance)) {
+					given.solutionVec.z = normalCollision.z * intersectionDistance;
+				}
+				
 
 				given.model1 = &model1;
 				given.model2 = &model2;
-				given.normal = normalCollision;
-				given.amountIntersect = intersectionDistance;
-				curDistance = intersectionDistance;
+				//given.solutionVec = normalCollision;
+				//given.amountIntersect = intersectionDistance;
+				//curDistance = intersectionDistance;
+
+				
+				collidingWhole = true;
 			}
 		}
 	}
-	if (curDistance <= 0) {
-		return false;
-	}
-	else {
-		return true;
-	}
+
+
+
+	return collidingWhole;
 }
 
 
@@ -389,20 +473,20 @@ bool World::checkHitboxesColliding(Hitbox& hitbox1, Hitbox& hitbox2, float& curi
 				curintersect = mod1Max - mod2Min;
 			}
 			else {
-				curintersect = mod2Max - mod1Min;
+				curintersect = mod1Min - mod2Max;
 			}
 			normalToIntersect = axis[i];
 			firstCheck = false;
 		}
-		else if (mod1Max >= mod2Min && curintersect > mod1Max - mod2Min) {
+		else if (mod1Max >= mod2Min && abs(curintersect) > abs(mod1Max - mod2Min)) {
 			//std::cout << "ran option 1 \n";
 			curintersect = mod1Max - mod2Min;
 			normalToIntersect = axis[i];
 		}
-		else if (mod1Min <= mod2Max && curintersect > mod2Max - mod1Min) {
+		else if (mod1Min <= mod2Max && abs(curintersect) > abs(mod2Max - mod1Min)) {
 			//std::cout << "ran option 2 \n";
 
-			curintersect = mod2Max - mod1Min;
+			curintersect = mod1Min - mod2Max;
 			normalToIntersect = axis[i];
 		}
 	}
@@ -434,30 +518,39 @@ void World::dealWithCollisions() {
 void World::dealWithBothMovable(int i) {
 
 
-	glm::vec3 moveBy2 = currentCollisions[i].normal * currentCollisions[i].amountIntersect/2.0f ;
+	glm::vec3 moveBy2 = currentCollisions[i].solutionVec / 2.0f;
 	glm::vec3 moveBy1 = moveBy2 * (-1.0f);
 
 
 	std::vector<Contact> contacts;
 	generateContacts(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
 	addImpulses(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
-	currentCollisions[i].model1->dealWithImpulses();
-	currentCollisions[i].model2->dealWithImpulses();
 
 
 
 	currentCollisions[i].model1->moveBy(moveBy1);
-	currentCollisions[i].model2->moveBy(moveBy2); 
+	currentCollisions[i].model2->moveBy(moveBy2);
 }
 
 void World::dealWithFirstMovable(int i) {
-	glm::vec3 moveBy = currentCollisions[i].normal * (-1.0f) * currentCollisions[i].amountIntersect;
-	currentCollisions[i].model1->moveBy(moveBy);
+	glm::vec3 moveBy1 = currentCollisions[i].solutionVec * (-1.0f);
+
+
+	std::vector<Contact> contacts;
+	generateContacts(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
+	addImpulses(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
+	
+	currentCollisions[i].model1->moveBy(moveBy1);
 }
 
 void World::dealWithSecondMovable(int i) {
-	glm::vec3 moveBy = currentCollisions[i].normal * currentCollisions[i].amountIntersect;
-	currentCollisions[i].model2->moveBy(moveBy);
+	glm::vec3 moveBy2 = currentCollisions[i].solutionVec * 1.0f;
+
+
+	std::vector<Contact> contacts;
+	generateContacts(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
+	addImpulses(*currentCollisions[i].model1, *currentCollisions[i].model2, contacts);
+	currentCollisions[i].model2->moveBy(moveBy2 );
 }
 
 void World::detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given) {
@@ -466,17 +559,18 @@ void World::detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given)
 	std::map<glm::vec3*, glm::vec3> valsVector;
 	for (int i = 0; i < h2.getVectorsSize(); i++) {
 		v1.push_back(h2.getVec(i));
-		valsFloat.insert({ h2.getVec(i) , -1 });
+		valsFloat.insert({ h2.getVec(i) , 100 });
 		valsVector.insert({ h2.getVec(i), glm::vec3(0) });
 	}
-	//!!!
-	// !!! for now it's only checking against one box, have to make it against 2.
+
+
 	for (int i = 0; i < h1.getNormalsSize(); i++) {
 		glm::vec3 projectedCm = glm::vec3(0);
 		MyMath::projection(*h1.getNormal(i), (*h1.getCm()), projectedCm);
 		float cm = MyMath::getVecMultiple(*h1.getNormal(i), projectedCm);
 		float max, min;
 		h1.getMaxMin(i, cm, max, min);
+		//std::cout << cm << " " << max << " " << min << "\n";
 
 
 		for (int k = 0; k < v1.size(); k++) {
@@ -488,11 +582,11 @@ void World::detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given)
 				k--;
 			}
 			else {
-				if (multiple < max && max - multiple > valsFloat[v1[k]]) {
+				if (multiple < max && max - multiple < valsFloat[v1[k]]) {
 					valsFloat[v1[k]] = max - multiple;
 					valsVector[v1[k]] = *h1.getNormal(i);
 				}
-				if (multiple > min && multiple - min > valsFloat[v1[k]]) {
+				if (multiple > min && multiple - min < valsFloat[v1[k]]) {
 					valsFloat[v1[k]] = multiple - min;
 					valsVector[v1[k]] = *h1.getNormal(i);
 				}
@@ -507,7 +601,7 @@ void World::detectPointFace(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given)
 	}
 }
 
-void World::correctNormalsToPointRightDirection(Model& h1, Model& h2, std::vector<Contact>& given) {
+void World::correctNormalsToPointRightDirection(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given) {
 	for (int i = 0; i < given.size(); i++) {
 		glm::vec3 cmToPos = given[i].position - *h1.getCm();
 		if (glm::dot(cmToPos, given[i].normal) < 0) {
@@ -586,8 +680,10 @@ void World::detectEdgeEdge(Hitbox& h1, Hitbox& h2, std::vector<Contact>& given) 
 void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>& given) {
 	for (int i = 0; i < model1.getHitboxesSize(); i++) {
 		for (int k = 0; k < model2.getHitboxesSize(); k++) {
+		
+
 			detectPointFace(*model1.getHitbox(i), *model2.getHitbox(k), given);
-			detectPointFace(*model2.getHitbox(i), *model1.getHitbox(k), given);
+			detectPointFace(*model2.getHitbox(k), *model1.getHitbox(i), given);
 			//for (int i = 0; i < given.size(); i++) {
 			//	std::cout << given[i].normal.x << " " << given[i].normal.y << " " << given[i].normal.z << "\n";
 			//}
@@ -598,9 +694,9 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 			//	std::cout << given[i].position.x << " " << given[i].position.y << " " << given[i].position.z << "\n";
 			//	std::cout << given[i].normal.x << " " << given[i].normal.y << " " << given[i].normal.z << "\n";
 			//}
-			correctNormalsToPointRightDirection(model1, model2, given);
 
 			detectEdgeEdge(*model1.getHitbox(i), *model2.getHitbox(k), given);
+			correctNormalsToPointRightDirection(*model1.getHitbox(i), *model2.getHitbox(k), given);
 
 			//std::cout << given.size() << "\n";
 			//for (int i = 0; i < given.size(); i++) {
@@ -611,31 +707,144 @@ void World::generateContacts(Model& model1, Model& model2, std::vector <Contact>
 
 		}
 	}
+
+
 }
 
 
 void World::addImpulses(Model& model1, Model& model2, std::vector<Contact>& vec) {
+
+	glm::vec3 centerCollision = glm::vec3(0, 0, 0);
 	for (int i = 0; i < vec.size(); i++) {
-		glm::vec3 cm1ToCollision = *model1.getCm();
-		glm::vec3 cm2ToCollision = *model2.getCm();
+		//vpc::printVec(vec[i].position);
+		centerCollision += vec[i].position;
+	}
+	centerCollision = centerCollision / (float)vec.size();
+	//vpc::printVec(centerCollision);
+	//std::cout << "\n \n ====== \n";
+	glm::vec3 frictionAmount = glm::vec3(0,0,0);
+
+	for (int i = 0; i < vec.size(); i++) {
+		glm::vec3 cm1ToCollision = centerCollision - *model1.getCm();
+		glm::vec3 cm2ToCollision = centerCollision - *model2.getCm();
 		float bounceFactor = model1.getBounceFactor() * model2.getBounceFactor();
 		float frictionFactor = model1.getFrictionFactor() * model2.getFrictionFactor();
-		float scale = abs(glm::dot(model1.getVelocity() - model2.getVelocity(), vec[i].normal)/1.0f) * bounceFactor * 3.0f /(float)vec.size();
+		glm::vec3 vDiff = model1.getVelocity() - model2.getVelocity();
+		glm::vec3 r1CrossN = glm::cross(cm1ToCollision, vec[i].normal);
+		glm::vec3 r2CrossN = glm::cross(cm2ToCollision, vec[i].normal);
+		float massFactor = 0;
+		if (model1.isMovable() && model2.isMovable()) {
+			massFactor = (1 / model1.getMass() + 1 / model2.getMass());
+		}
+		else if (model1.isMovable()) {
+			massFactor = 1/model1.getMass();
+		}
+		else if (model2.isMovable()) {
+			massFactor = 1/model2.getMass();
+		}
+		glm::vec3 J =
+			vec[i].normal * (1+ bounceFactor) *
+			(glm::dot(vDiff, vec[i].normal)
+				+ glm::dot(r1CrossN, *model1.getAngularVelocity())
+				- glm::dot(r2CrossN, *model2.getAngularVelocity())) /
+	// --------------------------------------------------------------------
+				(massFactor
+				+ (model1.isMovable()? glm::dot(r1CrossN, model1.applyInverseInertiaTensor(cm1ToCollision, vec[i].normal)) : 0)
+				+ (model2.isMovable()? glm::dot(r2CrossN, model2.applyInverseInertiaTensor(cm2ToCollision, vec[i].normal)): 0))/(float)vec.size();
+		//vpc::printVec(cm2ToCollision);
+		//std::cout << glm::dot(r1CrossN, *model1.getAngularVelocity()) << "\n";
+
 		Impulse impOn2;
-		std::cout << scale << vec[i].normal.x << " " << vec[i].normal.y << " " << vec[i].normal.z <<"\n";
-		impOn2.direction = vec[i].normal * scale ;
+		impOn2.direction = J * (1.0f);
+		//impOn2.directionFriction = projVonNormal;
 		impOn2.position = vec[i].position;
+		impOn2.centerCollision = centerCollision;
 		Impulse impOn1;
-		impOn1.direction = impOn2.direction * (-1.0f);
+		impOn1.direction = J * (-1.0f);
+		//impOn1.directionFriction = impOn2.directionFriction * (-1.0f);
 		impOn1.position = vec[i].position;
-		model1.addImpulse(impOn1);
-		model2.addImpulse(impOn2);
-		//float e = model1.getBounceFactor() * model2.getBounceFactor();
+		impOn1.centerCollision = centerCollision;
 
-		//glm::vec3 J = (1.0f+e) * glm::dot((model1.getVelocity() - model2.getVelocity()), vec[i].normal)
+		glm::vec3 velocityDifferences = model1.velocityAtPoint(vec[i].position) - model2.velocityAtPoint(vec[i].position);
 
+
+		glm::vec3 frictionDir = velocityDifferences-glm::dot(velocityDifferences, vec[i].normal) * vec[i].normal;
+		//std::cout << glm::length(frictionDir) << " friction dir \n";
+		if (glm::length(frictionDir) > 0.5) {
+			frictionDir = glm::normalize(frictionDir);
+			//vpc::printVec(velocityDifferences);
+			//vpc::printVec(vec[i].normal);
+			glm::vec3 frictionOn2 = frictionDir * (float)glm::length(J) *frictionFactor;
+			frictionAmount += frictionOn2;
+			//vpc::printVec(frictionOn2);
+		}
+		
+		if (model1.isMovable()) {
+			model1.addImpulse(impOn1);
+		}
+		if (model2.isMovable()) {
+			model2.addImpulse(impOn2);
+		}
+	}
+	//vpc::printVec(frictionAmount);
+	//std::cout << "=======\n";
+
+	Friction fricOn2;
+	fricOn2.position = centerCollision ;
+	fricOn2.value = frictionAmount;
+	fricOn2.otherModel = &model1;
+	Friction fricOn1;
+	fricOn1.position = centerCollision;
+	fricOn1.value = frictionAmount * (-1.0f);
+	fricOn1.otherModel = &model2;
+	//std::cout << model1.getVelocity().y << "\n";
+	if (model1.isMovable()) {
+		if (model1.getCurrentlyDriving()) {
+			//std::cout << "ran1 \n";
+			fricOn1.value = (fricOn1.value - glm::dot(fricOn1.value, model1.getFacing()) * model1.getFacing());
+		}
+		model1.addFrictionForce(fricOn1);
+	}
+	if (model2.isMovable() ) {
+		if (model2.getCurrentlyDriving()) {
+			//std::cout << "ran2 \n";
+			fricOn2.value = (fricOn2.value - glm::dot(fricOn2.value, model2.getFacing()) * model2.getFacing());
+		}
+		model2.addFrictionForce(fricOn2);
 	}
 }
+
+
+
+void World::applyDealWithImpulses() {
+	for (int i = 0; i < models.size(); i++) {
+		models[i].dealWithImpulses();
+		models[i].dealWithFrictionForce();
+	}
+}
+
+Model* World::getModel(int i) {
+	return &models[i];
+}
+
+glm::vec3 World::calculateTVec(Model & m1, Model & m2, glm::vec3 & pos, glm::vec3 & normal) {
+	glm::vec3 vr = m1.velocityAtPoint(pos) - m2.velocityAtPoint(pos);
+
+	if (glm::dot(vr, normal) != 0) {
+		glm::vec3 case1 = vr - normal * glm::dot(vr, normal);
+		return case1;
+	}
+	//}else if()
+}
+
+void World::dealWithImpulse(Model& m1, Model& m2) {
+	m1.dealWithImpulses();
+	m2.dealWithImpulses();
+}
+
+//glm::vec3 World::getRelativeVelocities(Model& m1, Model& m2, glm::vec3 & atPoint, glm::vec3 & normal) {
+//	return 
+//}
 
 
 

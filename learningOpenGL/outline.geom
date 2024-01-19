@@ -19,11 +19,6 @@ void main(){
 	vec4 position2 = data_in[2].given_translation_matrix * data_in[2].posMatrix * gl_in[2].gl_Position;
 
 
-
-
-
-
-
 	vec3 vector0 = vec3(position0.x-position1.x, position0.y-position1.y, position0.z-position1.z );
 	vec3 vector1 = vec3(position2.x-position1.x, position2.y-position1.y, position2.z-position1.z);
 	vec4 normal = vec4(normalize(cross(vector0, vector1)), 0.0);

@@ -2,10 +2,14 @@
 #include "MyMath.h"
 #include "World.h"
 #include "Model.h"
+#include "vectorPrintingClass.h"
+
 
 
 Hitbox::Hitbox(std::vector<glm::vec3> given, std::vector<glm::vec3> gNormals, Model * model, std::vector<int> gEdges) {
 	assignedModel = model;
+
+
 	for (int i = 0; i < given.size(); i++) {
 		cm += given[i];
 	}
@@ -21,10 +25,12 @@ Hitbox::Hitbox(std::vector<glm::vec3> given, std::vector<glm::vec3> gNormals, Mo
 	rotatedNormals = gNormals;
 	for (int i = 0; i < gNormals.size(); i++) {
 		float max, min;
-		this->getMaxMinFromProjection(gNormals[i], max, min);
+		
+		this->getMaxMinFromProjectionFromCm(gNormals[i], max, min);
 		wallsDistance.push_back(max);
 		wallsDistance.push_back(min);
 	}
+
 }
 
 void Hitbox::update(glm::mat4 * givenFull, glm::mat4* givenRotation) {
@@ -112,4 +118,30 @@ int Hitbox::getEdgeNumber() {
 void Hitbox::getEdge(int i, glm::vec3& e1, glm::vec3& e2) {
 	e1 = positionedVertices[edges[i * 2]];
 	e2 = positionedVertices[edges[i * 2+1]];
+}
+
+
+void Hitbox::getMaxMinFromProjectionFromCm(glm::vec3& projectVec, float& max, float& min) {
+	bool isFirst = true;
+	for (int i = 0; i < positionedVertices.size(); i++) {
+		glm::vec3 val;
+		glm::vec3 transfered = positionedVertices[i] - cm;
+		MyMath::projection(projectVec, transfered, val);
+		float square = MyMath::getVecMultiple(projectVec, val);
+		if (isFirst) {
+			max = square;
+			min = square;
+			isFirst = false;
+		}
+		else if (square > max) {
+			max = square;
+		}
+		else if (square < min) {
+			min = square;
+		}
+	}
+}
+
+Model* Hitbox::getParent() {
+	return assignedModel;
 }
